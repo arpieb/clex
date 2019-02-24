@@ -1,6 +1,6 @@
 defmodule Clex do
   @moduledoc """
-  Wrapper for :clu module
+  Wrapper for `:clu` module
   """
 
   def apply_kernel_args(kernel, args) do #/2
