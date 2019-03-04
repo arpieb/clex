@@ -15,13 +15,15 @@ defmodule Clex.CL do
   @type cl_error                :: any
 
   @type cl_device_type          :: :gpu | :cpu | :accelerator | :custom | :all | :default
-  @type cl_sub_devices_property :: {:equally | non_neg_integer} |
+  @type cl_sub_devices_property :: {:equally, non_neg_integer} |
                                    {:by_counts, [non_neg_integer]} |
                                    {:by_affinity_domain, :numa | :l4_cache | :l3_cache | :l2_cache | :l1_cache | :next_partitionable}
-  @type cl_queue_property       :: :out_of_order_exec_mode_enable | :profiling_enabled
+  @type cl_command_queue_property       :: :out_of_order_exec_mode_enable | :profiling_enabled
   @type cl_mem_flag             :: :read_write | :write_only | :read_only | :use_host_ptr | :alloc_host_ptr | :copy_host_ptr
   @type cl_buffer_create_type   :: :region
   @type cl_kernel_arg           :: integer | float | binary
+  @type cl_map_flag             :: :read | :write
+  @type cl_start_arg            :: {:debug, boolean}
 
   ########################################
   # Platform
@@ -152,9 +154,14 @@ defmodule Clex.CL do
   @doc ~S"""
   Create a command queue for processing OpenCL commands.
   """
-  @spec create_queue(context::cl_context, device::cl_device, properties::list(cl_queue_property)) :: {:ok, cl_command_queue} | {:error, cl_error}
+  @spec create_queue(context::cl_context, device::cl_device, properties::list(cl_command_queue_property)) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device, properties) do
     :cl.create_queue(context, device, properties)
+  end
+
+  @spec create_queue(context::cl_context, device::cl_device) :: {:ok, cl_command_queue} | {:error, cl_error}
+  def create_queue(context, device) do
+    :cl.create_queue(context, device, [])
   end
 
   @doc ~S"""
@@ -433,125 +440,226 @@ defmodule Clex.CL do
   # Events
   ########################################
 
-#  def enqueue_task() do #/3
-#  end
-#
-#  def enqueue_task() do #/4
-#  end
-#
-#  def nowait_enqueue_task() do #/3
-#  end
-#
-#  def enqueue_nd_range_kernel() do #/5
-#  end
-#
-#  def enqueue_nd_range_kernel() do #/6
-#  end
-#
-#  def nowait_enqueue_nd_range_kernel() do #/5
-#  end
-#
-#  def enqueue_marker() do #/1
-#  end
-#
-#  def enqueue_barrier() do #/1
-#  end
-#
-#  def enqueue_wait_for_events() do #/2
-#  end
-#
-#  def enqueue_read_buffer() do #/5
-#  end
-#
-#  def enqueue_write_buffer() do #/6
-#  end
-#
-#  def enqueue_write_buffer() do #/7
-#  end
-#
-#  def nowait_enqueue_write_buffer() do #/6
-#  end
-#
-#  def enqueue_read_image() do #/7
-#  end
-#
-#  def enqueue_write_image() do #/8
-#  end
-#
-#  def enqueue_write_image() do #/9
-#  end
-#
-#  def nowait_enqueue_write_image() do #/8
-#  end
-#
-#  def enqueue_copy_image() do #/6
-#  end
-#
-#  def enqueue_copy_image_to_buffer() do #/7
-#  end
-#
-#  def enqueue_copy_buffer_to_image() do #/7
-#  end
-#
-#  def enqueue_map_buffer() do #/6
-#  end
-#
-#  def enqueue_map_image() do #/6
-#  end
-#
-#  def enqueue_unmap_mem_object() do #/3
-#  end
-#
-#  def release_event() do #/1
-#  end
-#
-#  def retain_event() do #/1
-#  end
-#
-#  def event_info() do #/0
-#  end
-#
-#  def get_event_info() do #/1
-#  end
-#
-#  def get_event_info() do #/2
-#  end
-#
-#  def wait() do #/1
-#  end
-#
-#  def wait() do #/2
-#  end
-#
-#  def wait_for_event() do #/1
-#  end
-#
-#  def async_wait_for_event() do #/1
-#  end
+  @doc ~S"""
+  Enqueues a command to execute a kernel on a device.
+  """
+  @spec enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_task(queue, kernel, waitlist) do
+    :cl.enqueue_task(queue, kernel, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to execute a kernel on a device.
+  """
+  @spec nowait_enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def nowait_enqueue_task(queue, kernel, waitlist) do
+    :cl.nowait_enqueue_task(queue, kernel, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to execute a kernel on a device.
+  """
+  @spec enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global::list(non_neg_integer), local::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_nd_range_kernel(queue, kernel, global, local, waitlist) do
+    :cl.enqueue_nd_range_kernel(queue, kernel, global, local, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to execute a kernel on a device.
+  """
+  @spec nowait_enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global::list(non_neg_integer), local::list(non_neg_integer), waitlist::list(cl_event)) :: :ok | {:error, cl_error}
+  def nowait_enqueue_nd_range_kernel(queue, kernel, global, local, waitlist) do
+    :cl.nowait_enqueue_nd_range_kernel(queue, kernel, global, local, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a marker command to command_queue. The marker command returns an event which can be used to queue a wait on
+  this marker event i.e. wait for all commands queued before the marker command to complete.
+  """
+  @spec enqueue_marker(queue::cl_command_queue) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_marker(queue) do
+    :cl.enqueue_marker(queue)
+  end
+
+  @doc ~S"""
+  Enqueues a synchonrization point that ensures all prior commands in the given queue have completed.
+  """
+  @spec enqueue_barrier(queue::cl_command_queue) :: :ok | {:error, cl_error}
+  def enqueue_barrier(queue) do
+    :cl.enqueue_barrier(queue)
+  end
+
+  @doc ~S"""
+  Enqueues a wait for a specific event or a list of events to complete before any future commands queued in the
+  queue are executed.
+  """
+  @spec enqueue_wait_for_events(queue::cl_command_queue, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
+  def enqueue_wait_for_events(queue, waitlist) do
+    :cl.enqueue_wait_for_events(queue, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueue commands to read from a buffer object to host memory.
+  """
+  @spec enqueue_read_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_read_buffer(queue, buffer, offset, size, waitlist) do
+    :cl.enqueue_read_buffer(queue, buffer, offset, size, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueue commands to write to a buffer object from host memory.
+  """
+  @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
+    :cl.enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueue commands to write to a buffer object from host memory.
+  """
+  @spec nowait_enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
+  def nowait_enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
+    :cl.nowait_enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to map a region of the buffer object given by buffer into the host address space and returns a
+  pointer to this mapped region
+  """
+  @spec enqueue_map_buffer(queue::cl_command_queue, buffer::cl_mem, map_flags::list(cl_map_flag), offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_map_buffer(queue, buffer, map_flags, offset, size, waitlist) do
+    :cl.enqueue_map_buffer(queue, buffer, map_flags, offset, size, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to unmap a previously mapped region of a memory object.
+  """
+  @spec enqueue_unmap_mem_object(queue::cl_command_queue, buffer::cl_mem, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_unmap_mem_object(queue, buffer, waitlist) do
+    :cl.enqueue_unmap_mem_object(queue, buffer, waitlist)
+  end
+
+  @doc ~S"""
+  Decrement the reference count on an event.
+
+  Once the reference count goes to zero and all attached resources are released, the event is deleted.
+  To increment the reference count, see `Clex.CL.retain_event/1`.
+  """
+  @spec release_event(event::cl_event) :: :ok | {:error, cl_error}
+  def release_event(event) do
+    :cl.release_event(event)
+  end
+
+  @doc ~S"""
+  Increment the reference count on an event.
+
+  To decrement the reference count, see `Clex.CL.release_event/1`.
+  """
+  @spec retain_event(event::cl_event) :: :ok | {:error, cl_error}
+  def retain_event(event) do
+    :cl.retain_event(event)
+  end
+
+  @doc ~S"""
+  Returns all specific information about the event object.
+  """
+  @spec get_event_info(event::cl_event) :: {:ok, list(keyword())} | {:error, cl_error}
+  def get_event_info(event) do
+    :cl.get_event_info(event)
+  end
+
+  @doc ~S"""
+  Blocking wait for event to complete, no timeout.
+  """
+  @spec wait(event::cl_event) :: {:ok, binary} | {:error, cl_error}
+  def wait(event) do
+    :cl.wait(event)
+  end
+
+  @doc ~S"""
+  Blocking wait for event to complete, with timeout in milliseconds.
+  """
+  @spec wait(event::cl_event, timeout::non_neg_integer) :: {:ok, binary} | {:error, cl_error} | {:error, timeout}
+  def wait(event, timeout) do
+    :cl.wait(event, timeout)
+  end
+
+  @doc ~S"""
+  Generate a wait operation that will run non blocking.
+  A reference is return that can be used to match the event
+  that is sent when the event has completed or resulted in an error.
+  The event returned has the form `{cl_event, Ref, Result}`
+  where Ref is the reference that was returned from the call and
+  Result may be one of `binary() | 'complete'` or `{:error, cl_error()}`.
+  """
+  @spec async_wait_for_event(event::cl_event) :: {:ok, reference} | {:error, cl_error}
+  def async_wait_for_event(event) do
+    :cl.async_wait_for_event(event)
+  end
+
+  @doc ~S"""
+  Wait for all events in waitlist to complete.
+  """
+  @spec wait_for_events(waitlist::list(cl_event)) :: {:ok, binary} | {:error, cl_error}
+  def wait_for_events(waitlist) do
+    :cl.wait_for_events(waitlist)
+  end
 
   ########################################
   # Misc
   ########################################
 
-#  def start() do #/0
-#  end
-#
-#  def start() do #/1
-#  end
-#
-#  def flush() do #/1
-#  end
-#
-#  def async_flush() do #/1
-#  end
-#
-#  def finish() do #/1
-#  end
-#
-#  def async_finish() do #/1
-#  end
-#
-#  def stop() do #/0
-#  end
+  @doc ~S"""
+  Blocking request issues all previously queued OpenCL commands in a command queue to the device associated with the
+  command queue.
+
+  `Clex.CL.flush/1` only guarantees that all queued commands to command queue get
+  issued to the appropriate device. There is no guarantee that they
+  will be complete after the call returns.
+  """
+  @spec flush(queue::cl_command_queue) :: :ok | {:error, cl_error}
+  def flush(queue) do
+    :cl.flush(queue)
+  end
+
+  @doc ~S"""
+  Asynchronously issues all previously queued OpenCL commands in a command queue to the device associated with the
+  command queue.
+
+  `Clex.CL.async_flush/1` only guarantees that all queued commands to command queue get
+  issued to the appropriate device. There is no guarantee that they
+  will be complete after the call returns.
+  """
+  @spec async_flush(queue::cl_command_queue) :: :ok | {:error, cl_error}
+  def async_flush(queue) do
+    :cl.async_flush(queue)
+  end
+
+  @doc ~S"""
+  Blocks until all previously queued OpenCL commands
+  in a command-queue are issued to the associated device and have
+  completed.
+
+  `Clex.CL.finish/1` does not return until all queued commands in command_queue
+  have been processed and completed. This function is also a
+  synchronization point.
+  """
+  @spec finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
+  def finish(queue) do
+    :cl.finish(queue)
+  end
+
+  @doc ~S"""
+  Non-blocking call to ensure previously queued OpenCL commands
+  in a command-queue are issued to the associated device and have
+  completed.
+
+  `Clex.CL.aync_finish/1` does not block until all queued commands in command_queue
+  have been processed and completed, and there is no guarantee that all commands hav ebeen completed at return time.
+  """
+  @spec async_finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
+  def async_finish(queue) do
+    :cl.async_finish(queue)
+  end
 
 end
