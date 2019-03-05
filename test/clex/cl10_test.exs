@@ -1,10 +1,5 @@
 defmodule Clex.CL10Test do
   use ExUnit.Case
-  #doctest Clex
-
-  #  test "greets the world" do
-  #    assert Clex.hello() == :world
-  #  end
 
   alias Clex.CL10
 
@@ -121,8 +116,8 @@ defmodule Clex.CL10Test do
   end
 
   test "create_buffer with data" do
-    size = 32
     value = <<0, 1, 2, 3>>
+    size = byte_size(value)
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
@@ -132,21 +127,23 @@ defmodule Clex.CL10Test do
   end
 
   test "enqueue_read_buffer" do
-    size = 32
-    value = <<0, 1, 2, 3>>
+    size = 1024
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
     {:ok, queue} = CL10.create_queue(context, hd(devices))
-    {:ok, buffer} = CL10.create_buffer(context, [:read_write], size, value)
+    {:ok, buffer} = CL10.create_buffer(context, [:read_write], size)
 
     {:ok, event} = CL10.enqueue_read_buffer(queue, buffer, 0, size, [])
     assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_write_buffer" do
-    size = 32
     value = <<0, 1, 2, 3>>
+    size = byte_size(value)
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
@@ -155,11 +152,14 @@ defmodule Clex.CL10Test do
 
     {:ok, event} = CL10.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value, [])
     assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "retain_mem_object" do
-    size = 32
     value = <<0, 1, 2, 3>>
+    size = byte_size(value)
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
@@ -168,8 +168,8 @@ defmodule Clex.CL10Test do
   end
 
   test "release_mem_object" do
-    size = 32
     value = <<0, 1, 2, 3>>
+    size = byte_size(value)
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
@@ -178,10 +178,12 @@ defmodule Clex.CL10Test do
   end
 
   test "get_mem_object_info" do
+    value = <<0, 1, 2, 3>>
+    size = byte_size(value)
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32, <<0, 1, 2, 3>>)
+    {:ok, buffer} = CL10.create_buffer(context, [:read_write], size, value)
 
     {:ok, info} = CL10.get_mem_object_info(buffer)
     assert Keyword.keyword?(info)
