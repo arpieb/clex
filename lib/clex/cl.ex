@@ -3,27 +3,27 @@ defmodule Clex.CL do
   This module provides a wrapper for all OpenCL API calls exported by the :cl module
   """
 
-  @opaque cl_platform           :: {:platform_t, any, reference}
-  @opaque cl_device             :: {:device_t, any, reference}
-  @opaque cl_context            :: {:context_t, any, reference}
-  @opaque cl_command_queue      :: {:command_queue_t, any, reference}
-  @opaque cl_mem                :: {:mem_t, any, reference}
-  @opaque cl_sampler            :: {:sampler_t, any, reference}
-  @opaque cl_program            :: {:program_t, any, reference}
-  @opaque cl_kernel             :: {:kernel_t, any, reference}
-  @opaque cl_event              :: {:event_t, any, reference}
-  @type cl_error                :: any
+  @opaque cl_platform               :: {:platform_t, any, reference}
+  @opaque cl_device                 :: {:device_t, any, reference}
+  @opaque cl_context                :: {:context_t, any, reference}
+  @opaque cl_command_queue          :: {:command_queue_t, any, reference}
+  @opaque cl_mem                    :: {:mem_t, any, reference}
+  @opaque cl_sampler                :: {:sampler_t, any, reference}
+  @opaque cl_program                :: {:program_t, any, reference}
+  @opaque cl_kernel                 :: {:kernel_t, any, reference}
+  @opaque cl_event                  :: {:event_t, any, reference}
+  @type   cl_error                  :: any
 
-  @type cl_device_type          :: :gpu | :cpu | :accelerator | :custom | :all | :default
-  @type cl_sub_devices_property :: {:equally, non_neg_integer} |
-                                   {:by_counts, [non_neg_integer]} |
-                                   {:by_affinity_domain, :numa | :l4_cache | :l3_cache | :l2_cache | :l1_cache | :next_partitionable}
-  @type cl_command_queue_property       :: :out_of_order_exec_mode_enable | :profiling_enabled
-  @type cl_mem_flag             :: :read_write | :write_only | :read_only | :use_host_ptr | :alloc_host_ptr | :copy_host_ptr
-  @type cl_buffer_create_type   :: :region
-  @type cl_kernel_arg           :: integer | float | binary
-  @type cl_map_flag             :: :read | :write
-  @type cl_start_arg            :: {:debug, boolean}
+  @type   cl_device_type            :: :gpu | :cpu | :accelerator | :custom | :all | :default
+  @type   cl_sub_devices_property   :: {:equally, non_neg_integer} |
+                                       {:by_counts, [non_neg_integer]} |
+                                       {:by_affinity_domain, :numa | :l4_cache | :l3_cache | :l2_cache | :l1_cache | :next_partitionable}
+  @type   cl_command_queue_property :: :out_of_order_exec_mode_enable | :profiling_enabled
+  @type   cl_mem_flag               :: :read_write | :write_only | :read_only | :use_host_ptr | :alloc_host_ptr | :copy_host_ptr
+  @type   cl_buffer_create_type     :: :region
+  @type   cl_kernel_arg             :: integer | float | binary
+  @type   cl_map_flag               :: :read | :write
+  @type   cl_start_arg              :: {:debug, boolean}
 
   ########################################
   # Platform
@@ -316,6 +316,14 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
+  Build a program for the given devices using the options.
+  """
+  @spec build_program(program::cl_program, devices::list(cl_device)) :: :ok | {:error, cl_error}
+  def build_program(program, devices) do
+    :cl.build_program(program, devices, '')
+  end
+
+  @doc ~S"""
   Allows the implementation to release the resources allocated by the OpenCL compiler.
   """
   @spec unload_compiler() :: :ok | {:error, cl_error}
@@ -449,9 +457,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to execute a kernel on a device.
+  Enqueues a command to execute a kernel on a device, without tracking the command completion.
   """
-  @spec nowait_enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  @spec nowait_enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
   def nowait_enqueue_task(queue, kernel, waitlist) do
     :cl.nowait_enqueue_task(queue, kernel, waitlist)
   end
@@ -465,7 +473,7 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to execute a kernel on a device.
+  Enqueues a command to execute a kernel on a device, without tracking the command completion.
   """
   @spec nowait_enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global::list(non_neg_integer), local::list(non_neg_integer), waitlist::list(cl_event)) :: :ok | {:error, cl_error}
   def nowait_enqueue_nd_range_kernel(queue, kernel, global, local, waitlist) do
@@ -499,7 +507,7 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueue commands to read from a buffer object to host memory.
+  Enqueue commands to read from a buffer object to host memory, with a returned event to track the command completion.
   """
   @spec enqueue_read_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_read_buffer(queue, buffer, offset, size, waitlist) do
@@ -507,7 +515,7 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueue commands to write to a buffer object from host memory.
+  Enqueue commands to write to a buffer object from host memory, with a returned event to track the command completion.
   """
   @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
@@ -515,7 +523,7 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueue commands to write to a buffer object from host memory.
+  Enqueue commands to write to a buffer object from host memory, without tracking the command completion.
   """
   @spec nowait_enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
   def nowait_enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do

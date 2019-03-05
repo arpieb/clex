@@ -43,11 +43,11 @@ defmodule Clex.CL10 do
   # enqueue_write_image/8, enqueue_write_image/9
   # enqueue_copy_image/6
   # enqueue_copy_image_to_buffer/7
-  # enqueue_copy_buffer/?
+  # enqueue_copy_buffer/7
   # enqueue_copy_buffer_to_image/7
-  add_cl_func :enqueue_map_buffer, [queue, buffer, map_flags, offset, size, waitlist]
+  # enqueue_map_buffer/6
   # enqueue_map_image/6
-  add_cl_func :enqueue_unmap_mem_object, [queue, buffer, waitlist]
+  # enqueue_unmap_mem_object/3
   add_cl_func :get_mem_object_info, [buffer]
   # get_image_info/1
 
@@ -64,6 +64,7 @@ defmodule Clex.CL10 do
   add_cl_func :release_program, [program]
   add_cl_func :unload_compiler, []
   add_cl_func :build_program, [program, devices, options]
+  add_cl_func :build_program, [program, devices]
   add_cl_func :get_program_info, [program]
   add_cl_func :get_program_build_info, [program, device]
 
