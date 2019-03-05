@@ -54,22 +54,26 @@ defmodule Clex.CL10Test do
   end
 
   test "create_context_from_type" do
-    {:ok, context} = CL10.create_context_from_type(:all)
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, context} = CL10.create_context_from_type(platform, :all)
     assert {:context_t, id, reference} = context
   end
 
   test "release_context" do
-    {:ok, context} = CL10.create_context_from_type(:all)
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, context} = CL10.create_context_from_type(platform, :all)
     assert :ok == CL10.release_context(context)
   end
 
   test "retain_context" do
-    {:ok, context} = CL10.create_context_from_type(:all)
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, context} = CL10.create_context_from_type(platform, :all)
     assert :ok == CL10.retain_context(context)
   end
 
   test "get_context_info" do
-    {:ok, context} = CL10.create_context_from_type(:all)
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, context} = CL10.create_context_from_type(platform, :all)
     {:ok, info} = CL10.get_context_info(context)
     assert Keyword.keyword?(info)
   end

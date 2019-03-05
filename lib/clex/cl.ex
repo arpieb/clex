@@ -113,9 +113,14 @@ defmodule Clex.CL do
 
   Type can be one of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
   """
-  @spec create_context_from_type(device_type::cl_device_type) :: {:ok, cl_context} | {:error, cl_error}
-  def create_context_from_type(device_type) do
-    :cl.create_context_from_type(device_type)
+  @spec create_context_from_type(platform::cl_platform, device_type::cl_device_type) :: {:ok, cl_context} | {:error, cl_error}
+  def create_context_from_type(platform, device_type) do
+    case get_device_ids(platform, device_type) do
+      {:ok, devices} ->
+        create_context(devices)
+      err ->
+        err
+    end
   end
 
   @doc ~S"""

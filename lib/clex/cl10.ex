@@ -18,7 +18,7 @@ defmodule Clex.CL10 do
 
   # Context
   add_cl_func :create_context, [devices]
-  add_cl_func :create_context_from_type, [device_type]
+  add_cl_func :create_context_from_type, [platform, device_type]
   add_cl_func :release_context, [context]
   add_cl_func :retain_context, [context]
   add_cl_func :get_context_info, [context]
