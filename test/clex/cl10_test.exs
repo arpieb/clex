@@ -675,4 +675,66 @@ defmodule Clex.CL10Test do
     assert :ok == CL10.release_event(event)
   end
 
+  ########################################
+  # Execution of Kernels and Memory Object Commands
+  ########################################
+
+  test "enqueue_marker" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    {:ok, event} = CL10.enqueue_marker(queue)
+    assert {:event_t, id, reference} = event
+  end
+
+  test "enqueue_wait_for_events" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    events = []
+    {:ok, event} = CL10.enqueue_marker(queue)
+    events = [event | events]
+    {:ok, event} = CL10.enqueue_marker(queue)
+    events = [event | events]
+
+    assert :ok == CL10.enqueue_wait_for_events(queue, events)
+  end
+
+  test "enqueue_barrier" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    assert :ok == CL10.enqueue_barrier(queue)
+  end
+
+  ########################################
+  # Flush and Finish
+  ########################################
+
+  test "flush" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, _event} = CL10.enqueue_marker(queue)
+
+    assert :ok == CL10.flush(queue)
+  end
+
+  test "finish" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, _event} = CL10.enqueue_marker(queue)
+
+    assert :ok == CL10.finish(queue)
+  end
+
 end
