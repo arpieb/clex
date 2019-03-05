@@ -557,4 +557,122 @@ defmodule Clex.CL10Test do
     assert Keyword.keyword?(info)
   end
 
+  ########################################
+  # Executing Kernels
+  ########################################
+
+  test "enqueue_nd_range_kernel" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+    {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
+    CL10.set_kernel_arg(kernel, 0, buffer)
+
+    {:ok, event} = CL10.enqueue_nd_range_kernel(queue, kernel, [1], [1], [])
+    assert {:event_t, id, reference} = event
+  end
+
+  test "enqueue_task" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+    {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
+    CL10.set_kernel_arg(kernel, 0, buffer)
+
+    {:ok, event} = CL10.enqueue_task(queue, kernel, [])
+    assert {:event_t, id, reference} = event
+  end
+
+  ########################################
+  # Event Objects
+  ########################################
+
+  test "wait_for_events" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    events = []
+    {:ok, event} = CL10.enqueue_marker(queue)
+    events = [event | events]
+    {:ok, event} = CL10.enqueue_marker(queue)
+    events = [event | events]
+
+    assert is_list(CL10.wait_for_events(events))
+  end
+
+  test "get_event_info" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, event} = CL10.enqueue_marker(queue)
+
+    {:ok, info} = CL10.get_event_info(event)
+    assert Keyword.keyword?(info)
+  end
+
+  test "retain_event" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, event} = CL10.enqueue_marker(queue)
+
+    assert :ok == CL10.retain_event(event)
+  end
+
+  test "release_event" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+    {:ok, event} = CL10.enqueue_marker(queue)
+
+    assert :ok == CL10.release_event(event)
+  end
+
 end

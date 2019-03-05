@@ -579,7 +579,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Blocking wait for event to complete, no timeout.
   """
-  @spec wait(event::cl_event) :: {:ok, binary} | {:error, cl_error}
+  @spec wait(event::cl_event) :: {:ok, any} | {:error, cl_error}
   def wait(event) do
     :cl.wait(event)
   end
@@ -587,7 +587,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Blocking wait for event to complete, with timeout in milliseconds.
   """
-  @spec wait(event::cl_event, timeout::non_neg_integer) :: {:ok, binary} | {:error, cl_error} | {:error, timeout}
+  @spec wait(event::cl_event, timeout::non_neg_integer) :: {:ok, any} | {:error, cl_error} | {:error, timeout}
   def wait(event, timeout) do
     :cl.wait(event, timeout)
   end
@@ -608,7 +608,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Wait for all events in waitlist to complete.
   """
-  @spec wait_for_events(waitlist::list(cl_event)) :: {:ok, binary} | {:error, cl_error}
+  @spec wait_for_events(waitlist::list(cl_event)) :: list({:ok, any} | {:error, cl_error})
   def wait_for_events(waitlist) do
     :cl.wait_for_events(waitlist)
   end
