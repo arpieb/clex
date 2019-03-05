@@ -24,6 +24,11 @@ defmodule Clex.CL do
   @type   cl_kernel_arg             :: cl_mem | integer | float | binary
   @type   cl_map_flag               :: :read | :write
   @type   cl_start_arg              :: {:debug, boolean}
+  @type   cl_mem_object_type        :: :buffer | :image2d | :image3d |
+                                       :image2d_array | :image1d | :image1d_array | :image1d_buffer
+  @type   cl_addressing_mode        :: :none | :clamp_to_edge | :clamp | :repeat
+  @type   cl_filter_mode            :: :nearest | :linear
+  @type   cl_cache_type             :: :none | :read_only | :read_write
 
   ########################################
   # Platform
