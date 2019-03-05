@@ -354,4 +354,207 @@ defmodule Clex.CL10Test do
     assert Keyword.keyword?(info)
   end
 
+  ########################################
+  # Kernel Objects
+  ########################################
+
+  test "create_kernel" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+    assert {:kernel_t, id, reference} = kernel
+  end
+
+  test "create_kernels_in_program" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+
+    {:ok, kernels} = CL10.create_kernels_in_program(program)
+    assert is_list(kernels)
+  end
+
+  test "retain_kernel" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+
+    assert :ok == CL10.retain_kernel(kernel)
+  end
+
+  test "release_kernel" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+
+    assert :ok == CL10.release_kernel(kernel)
+  end
+
+  test "set_kernel_arg" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+    {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
+
+    assert :ok == CL10.set_kernel_arg(kernel, 0, buffer)
+  end
+
+  test "get_kernel_info" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+
+    {:ok, info} = CL10.get_kernel_info(kernel)
+    assert Keyword.keyword?(info)
+  end
+
+  test "get_kernel_workgroup_info" do
+    source = ~S"""
+    __kernel void HelloWorld(__global char* data) {
+      data[0] = 'H';
+      data[1] = 'E';
+      data[2] = 'L';
+      data[3] = 'L';
+      data[4] = 'O';
+      data[5] = ' ';
+      data[6] = 'W';
+      data[7] = 'O';
+      data[8] = 'R';
+      data[9] = 'L';
+      data[10] = 'D';
+      data[11] = '!';
+      data[12] = '\n';
+    }
+    """
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, program} = CL10.create_program_with_source(context, source)
+    CL10.build_program(program, devices)
+    {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
+
+    {:ok, info} = CL10.get_kernel_workgroup_info(kernel, hd(devices))
+    assert Keyword.keyword?(info)
+  end
+
 end

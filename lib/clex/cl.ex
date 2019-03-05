@@ -21,7 +21,7 @@ defmodule Clex.CL do
   @type   cl_command_queue_property :: :out_of_order_exec_mode_enable | :profiling_enabled
   @type   cl_mem_flag               :: :read_write | :write_only | :read_only | :use_host_ptr | :alloc_host_ptr | :copy_host_ptr
   @type   cl_buffer_create_type     :: :region
-  @type   cl_kernel_arg             :: integer | float | binary
+  @type   cl_kernel_arg             :: cl_mem | integer | float | binary
   @type   cl_map_flag               :: :read | :write
   @type   cl_start_arg              :: {:debug, boolean}
 
