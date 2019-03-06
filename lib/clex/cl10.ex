@@ -36,26 +36,23 @@ defmodule Clex.CL10 do
   add_cl_func :enqueue_write_buffer, [queue, buffer, offset, size, data, waitlist]
   add_cl_func :retain_mem_object, [buffer]
   add_cl_func :release_mem_object, [buffer]
-  # create_image2d/7
-  # create_image3d/9
-  # get_supported_image_formats/3
-  # enqueue_read_image/7
-  # enqueue_write_image/8, enqueue_write_image/9
-  # enqueue_copy_image/6
-  # enqueue_copy_image_to_buffer/7
-  # enqueue_copy_buffer/7
-  # enqueue_copy_buffer_to_image/7
-  # enqueue_map_buffer/6
-  # enqueue_map_image/6
-  # enqueue_unmap_mem_object/3
+  add_cl_func :create_image2d, [context, flags, image_format, width, height, row_pitch, data]
+  add_cl_func :create_image3d, [context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data]
+  add_cl_func :get_supported_image_formats, [context, flags, image_type]
+  add_cl_func :enqueue_read_image, [queue, image, origin, region, row_pitch, slice_pitch, waitlist]
+  add_cl_func :enqueue_write_image, [queue, image, origin, region, row_pitch, slice_pitch, data, waitlist]
+  add_cl_func :enqueue_copy_image, [queue, src_image, dest_image, src_origin, dest_origin, region, waitlist]
+  add_cl_func :enqueue_copy_image_to_buffer, [queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist]
+  add_cl_func :enqueue_copy_buffer, [queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist]
+  add_cl_func :enqueue_copy_buffer_to_image, [queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist]
   add_cl_func :get_mem_object_info, [buffer]
-  # get_image_info/1
+  add_cl_func :get_image_info, [image]
 
   # Sampler Objects
-  # create_sampler/4
-  # retain_sampler/1
-  # release_sampler/1
-  # get_sampler_info/1
+  add_cl_func :create_sampler, [context, normalized, addressing_mode, filter_mode]
+  add_cl_func :retain_sampler, [sampler]
+  add_cl_func :release_sampler, [sampler]
+  add_cl_func :get_sampler_info, [sampler]
 
   # Program Objects
   add_cl_func :create_program_with_source, [context, source]

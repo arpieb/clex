@@ -3,6 +3,8 @@ defmodule Clex.CL do
   This module provides a wrapper for all OpenCL API calls exported by the :cl module
   """
 
+  require Clex.CL.ImageFormat
+
   @opaque cl_platform               :: {:platform_t, any, reference}
   @opaque cl_device                 :: {:device_t, any, reference}
   @opaque cl_context                :: {:context_t, any, reference}
@@ -29,6 +31,15 @@ defmodule Clex.CL do
   @type   cl_addressing_mode        :: :none | :clamp_to_edge | :clamp | :repeat
   @type   cl_filter_mode            :: :nearest | :linear
   @type   cl_cache_type             :: :none | :read_only | :read_write
+  @type   cl_channel_order          :: :r | :a | :rg | :ra | :rgb | :rgba | :bgra | :argb | :intensity | :luminance | :rx | :rgx | :rgbx | :depth | :depth_stencil
+  @type   cl_channel_type           :: :snorm_int8 | :snorm_int16 |
+                                       :unorm_int8 | :unorm_int16  | :unorm_int24 | :unorm_short_565 | :unorm_short_555 | :unorm_int_101010 |
+                                       :signed_int8 | :signed_int16 | :signed_int32 |
+                                       :unsigned_int8 | :unsigned_int16 | :unsigned_int32 |
+                                       :half_float | :float
+
+  # Records
+  @type   cl_image_format           :: Clex.CL.ImageFormat.t
 
   ########################################
   # Platform
@@ -162,13 +173,16 @@ defmodule Clex.CL do
   ########################################
 
   @doc ~S"""
-  Create a command queue for processing OpenCL commands.
+  Create a command queue for processing OpenCL commands, with properties.
   """
   @spec create_queue(context::cl_context, device::cl_device, properties::list(cl_command_queue_property)) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device, properties) do
     :cl.create_queue(context, device, properties)
   end
 
+  @doc ~S"""
+  Create a command queue for processing OpenCL commands.
+  """
   @spec create_queue(context::cl_context, device::cl_device) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device) do
     :cl.create_queue(context, device, [])
@@ -260,13 +274,126 @@ defmodule Clex.CL do
     :cl.get_mem_object_info(buffer)
   end
 
-  # TODO: Add/implement image-related API calls
+  @doc ~S"""
+  Creates a 2D image object.
+  """
+  @spec create_image2d(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, width::non_neg_integer, height::non_neg_integer, row_pitch::non_neg_integer, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
+  def create_image2d(context, flags, image_format, width, height, row_pitch, data) do
+    :cl.create_image2d(context, flags, image_format, width, height, row_pitch, data)
+  end
+
+  @doc ~S"""
+  Creates a 3D image object.
+  """
+  @spec create_image3d(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, width::non_neg_integer, height::non_neg_integer, depth::non_neg_integer, row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
+  def create_image3d(context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data) do
+    :cl.create_image3d(context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data)
+  end
+
+  @doc ~S"""
+  Get the list of image formats supported by an OpenCL implementation.
+  """
+  @spec get_supported_image_formats(context::cl_context, flags::list(cl_mem_flag), image_type::cl_mem_object_type) :: {:ok, list(tuple)} | {:error, cl_error}
+  def get_supported_image_formats(context, flags, image_type) do
+    :cl.get_supported_image_formats(context, flags, image_type)
+  end
+
+  @doc ~S"""
+  Enqueues a command to read from a 2D or 3D image object to host memory.
+  """
+  @spec enqueue_read_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist) do
+    :cl.enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to write from a 2D or 3D image object to host memory, with event to synchornize on.
+  """
+  @spec enqueue_write_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist) do
+    :cl.enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to copy image objects.
+  """
+  @spec enqueue_copy_image(queue::cl_command_queue, src_image::cl_mem, dest_image::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist) do
+    :cl.enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to copy an image object to a buffer object.
+  """
+  @spec enqueue_copy_image_to_buffer(queue::cl_command_queue, src_image::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), region::list(non_neg_integer), dest_offset::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist) do
+    :cl.enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to copy a buffer object to another buffer object.
+  """
+  @spec enqueue_copy_buffer(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_offset::non_neg_integer, dest_offset::non_neg_integer, cb::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist) do
+    :cl.enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to copy a buffer object to an image object.
+  """
+  @spec enqueue_copy_buffer_to_image(queue::cl_command_queue, src_buffer::cl_mem, dest_image::cl_mem, src_offset::non_neg_integer, dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist) do
+    :cl.enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist)
+  end
+
+  @doc ~S"""
+  Retrieves information pertaining to this image object.
+  """
+  @spec get_image_info(image::cl_mem) :: {:ok, keyword()} | {:error, cl_error}
+  def get_image_info(image) do
+    :cl.get_image_info(image)
+  end
 
   ########################################
   # Sampler
   ########################################
 
-  # TODO: Add/implement sampler API calls
+  @doc ~S"""
+  Creates a sampler object.
+  """
+  @spec create_sampler(context::cl_context, normalized::boolean, addressing_mode::cl_addressing_mode, filter_mode::cl_filter_mode) :: {:ok, cl_sampler} | {:error, cl_error}
+  def create_sampler(context, normalized, addressing_mode, filter_mode) do
+    :cl.create_sampler(context, normalized, addressing_mode, filter_mode)
+  end
+
+  @doc ~S"""
+  Increment the reference count on a sampler.
+
+  To decrement the reference count, see `Clex.CL.release_sampler/1`.
+  """
+  @spec retain_sampler(sampler::cl_sampler) :: :ok | {:error, cl_error}
+  def retain_sampler(sampler) do
+    :cl.retain_sampler(sampler)
+  end
+
+  @doc ~S"""
+  Decrement the reference count on a sampler.
+
+  Once the reference count goes to zero and all attached resources are released, the sampler is deleted.
+  To increment the reference count, see `Clex.CL.retain_sampler/1`.
+  """
+  @spec release_sampler(sampler::cl_sampler) :: :ok | {:error, cl_error}
+  def release_sampler(sampler) do
+    :cl.release_sampler(sampler)
+  end
+
+  @doc ~S"""
+  Returns information about the sampler object.
+  """
+  @spec get_sampler_info(sampler::cl_sampler) :: {:ok, keyword()} | {:error, cl_error}
+  def get_sampler_info(sampler) do
+    :cl.get_sampler_info(sampler)
+  end
 
   ########################################
   # Program
@@ -467,27 +594,11 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to execute a kernel on a device, without tracking the command completion.
-  """
-  @spec nowait_enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
-  def nowait_enqueue_task(queue, kernel, waitlist) do
-    :cl.nowait_enqueue_task(queue, kernel, waitlist)
-  end
-
-  @doc ~S"""
   Enqueues a command to execute a kernel on a device.
   """
   @spec enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global::list(non_neg_integer), local::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_nd_range_kernel(queue, kernel, global, local, waitlist) do
     :cl.enqueue_nd_range_kernel(queue, kernel, global, local, waitlist)
-  end
-
-  @doc ~S"""
-  Enqueues a command to execute a kernel on a device, without tracking the command completion.
-  """
-  @spec nowait_enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global::list(non_neg_integer), local::list(non_neg_integer), waitlist::list(cl_event)) :: :ok | {:error, cl_error}
-  def nowait_enqueue_nd_range_kernel(queue, kernel, global, local, waitlist) do
-    :cl.nowait_enqueue_nd_range_kernel(queue, kernel, global, local, waitlist)
   end
 
   @doc ~S"""
@@ -530,31 +641,6 @@ defmodule Clex.CL do
   @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
     :cl.enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
-  end
-
-  @doc ~S"""
-  Enqueue commands to write to a buffer object from host memory, without tracking the command completion.
-  """
-  @spec nowait_enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
-  def nowait_enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
-    :cl.nowait_enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
-  end
-
-  @doc ~S"""
-  Enqueues a command to map a region of the buffer object given by buffer into the host address space and returns a
-  pointer to this mapped region
-  """
-  @spec enqueue_map_buffer(queue::cl_command_queue, buffer::cl_mem, map_flags::list(cl_map_flag), offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_map_buffer(queue, buffer, map_flags, offset, size, waitlist) do
-    :cl.enqueue_map_buffer(queue, buffer, map_flags, offset, size, waitlist)
-  end
-
-  @doc ~S"""
-  Enqueues a command to unmap a previously mapped region of a memory object.
-  """
-  @spec enqueue_unmap_mem_object(queue::cl_command_queue, buffer::cl_mem, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_unmap_mem_object(queue, buffer, waitlist) do
-    :cl.enqueue_unmap_mem_object(queue, buffer, waitlist)
   end
 
   @doc ~S"""
@@ -673,7 +759,7 @@ defmodule Clex.CL do
   completed.
 
   `Clex.CL.aync_finish/1` does not block until all queued commands in command_queue
-  have been processed and completed, and there is no guarantee that all commands hav ebeen completed at return time.
+  have been processed and completed, and there is no guarantee that all commands have been completed at return time.
   """
   @spec async_finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def async_finish(queue) do

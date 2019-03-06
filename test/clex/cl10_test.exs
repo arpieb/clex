@@ -1,7 +1,26 @@
 defmodule Clex.CL10Test do
   use ExUnit.Case
+  use Clex.CL.ImageFormat
 
   alias Clex.CL10
+
+  @kernel_source ~S"""
+  __kernel void HelloWorld(__global char* data) {
+    data[0] = 'H';
+    data[1] = 'E';
+    data[2] = 'L';
+    data[3] = 'L';
+    data[4] = 'O';
+    data[5] = ' ';
+    data[6] = 'W';
+    data[7] = 'O';
+    data[8] = 'R';
+    data[9] = 'L';
+    data[10] = 'D';
+    data[11] = '!';
+    data[12] = '\n';
+  }
+  """
 
   ########################################
   # Platform
@@ -177,6 +196,166 @@ defmodule Clex.CL10Test do
     assert :ok == CL10.release_mem_object(buffer)
   end
 
+  test "create_image2d" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+
+    {:ok, image} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+    assert {:mem_t, id, reference} = image
+  end
+
+  test "create_image3d" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    d = 256
+    data_size = w * h * d * 4 * 8
+    data = <<0::size(data_size)>>
+
+    {:ok, image} = CL10.create_image3d(context, [:read_write], img_format, w, h, d, 0, 0, data)
+    assert {:mem_t, id, reference} = image
+  end
+
+  test "get_supported_image_formats" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    {:ok, formats} = CL10.get_supported_image_formats(context, [], :image2d)
+    assert is_list(formats)
+  end
+
+  test "enqueue_read_image" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    {:ok, image} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+
+    {:ok, event} = CL10.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
+    assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
+  end
+
+  test "enqueue_write_image" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    {:ok, image} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+
+    {:ok, event} = CL10.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
+    assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
+  end
+
+  test "enqueue_copy_image" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    {:ok, src} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+    {:ok, dest} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+
+    {:ok, event} = CL10.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
+    assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
+  end
+
+  test "enqueue_copy_image_to_buffer" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    {:ok, src} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+    {:ok, buffer} = CL10.create_buffer(context, [:read_write], byte_size(data))
+
+    {:ok, event} = CL10.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
+    assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
+  end
+
+  test "enqueue_copy_buffer" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    bufsize = 1024
+    {:ok, src} = CL10.create_buffer(context, [:read_write], bufsize)
+    {:ok, dest} = CL10.create_buffer(context, [:read_write], bufsize)
+
+    {:ok, event} = CL10.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize, [])
+    assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
+  end
+
+  test "enqueue_copy_buffer_to_image" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+    {:ok, queue} = CL10.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    {:ok, dest} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+    {:ok, src} = CL10.create_buffer(context, [:read_write], byte_size(data))
+
+    {:ok, event} = CL10.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
+    assert {:event_t, id, reference} = event
+
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
+  end
+
   test "get_mem_object_info" do
     value = <<0, 1, 2, 3>>
     size = byte_size(value)
@@ -189,33 +368,74 @@ defmodule Clex.CL10Test do
     assert Keyword.keyword?(info)
   end
 
+  test "get_image_info" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    {:ok, image} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
+
+    {:ok, info} = CL10.get_image_info(image)
+    assert Keyword.keyword?(info)
+  end
+
+  ########################################
+  # Sampler Objects
+  ########################################
+
+  test "create_sampler" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    {:ok, sampler} = CL10.create_sampler(context, false, :none, :linear)
+    assert {:sampler_t, id, reference} = sampler
+  end
+
+  test "retain_sampler" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    {:ok, sampler} = CL10.create_sampler(context, false, :none, :linear)
+    assert :ok == CL10.retain_sampler(sampler)
+  end
+
+  test "release_sampler" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    {:ok, sampler} = CL10.create_sampler(context, false, :none, :linear)
+    assert :ok == CL10.release_sampler(sampler)
+  end
+
+  test "get_sampler_info" do
+    {:ok, [platform | _]} = CL10.get_platform_ids()
+    {:ok, devices} = CL10.get_device_ids(platform, :all)
+    {:ok, context} = CL10.create_context(devices)
+
+    {:ok, sampler} = CL10.create_sampler(context, false, :none, :linear)
+
+    {:ok, info} = CL10.get_sampler_info(sampler)
+    assert Keyword.keyword?(info)
+  end
+
   ########################################
   # Program Objects
   ########################################
 
   test "create_program_with_source" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
 
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     assert {:program_t, id, reference} = program
   end
 
@@ -224,53 +444,19 @@ defmodule Clex.CL10Test do
 #  end
 
   test "retain_program" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
 
     assert :ok == CL10.retain_program(program)
   end
 
   test "release_program" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
 
     assert :ok == CL10.release_program(program)
   end
@@ -280,80 +466,29 @@ defmodule Clex.CL10Test do
   end
 
   test "build_program" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
 
     assert :ok == CL10.build_program(program, devices)
   end
 
   test "get_program_info" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
 
     {:ok, info} = CL10.get_program_info(program)
     assert Keyword.keyword?(info)
   end
 
   test "get_program_build_info" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
 
     {:ok, info} = CL10.get_program_build_info(program, hd(devices))
@@ -365,27 +500,10 @@ defmodule Clex.CL10Test do
   ########################################
 
   test "create_kernel" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
 
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
@@ -393,27 +511,10 @@ defmodule Clex.CL10Test do
   end
 
   test "create_kernels_in_program" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
 
     {:ok, kernels} = CL10.create_kernels_in_program(program)
@@ -421,27 +522,10 @@ defmodule Clex.CL10Test do
   end
 
   test "retain_kernel" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
 
@@ -449,27 +533,10 @@ defmodule Clex.CL10Test do
   end
 
   test "release_kernel" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
 
@@ -477,27 +544,10 @@ defmodule Clex.CL10Test do
   end
 
   test "set_kernel_arg" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
@@ -506,27 +556,10 @@ defmodule Clex.CL10Test do
   end
 
   test "get_kernel_info" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
 
@@ -535,27 +568,10 @@ defmodule Clex.CL10Test do
   end
 
   test "get_kernel_workgroup_info" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
 
@@ -568,28 +584,11 @@ defmodule Clex.CL10Test do
   ########################################
 
   test "enqueue_nd_range_kernel" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
     {:ok, queue} = CL10.create_queue(context, hd(devices))
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
@@ -600,28 +599,11 @@ defmodule Clex.CL10Test do
   end
 
   test "enqueue_task" do
-    source = ~S"""
-    __kernel void HelloWorld(__global char* data) {
-      data[0] = 'H';
-      data[1] = 'E';
-      data[2] = 'L';
-      data[3] = 'L';
-      data[4] = 'O';
-      data[5] = ' ';
-      data[6] = 'W';
-      data[7] = 'O';
-      data[8] = 'R';
-      data[9] = 'L';
-      data[10] = 'D';
-      data[11] = '!';
-      data[12] = '\n';
-    }
-    """
     {:ok, [platform | _]} = CL10.get_platform_ids()
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
     {:ok, queue} = CL10.create_queue(context, hd(devices))
-    {:ok, program} = CL10.create_program_with_source(context, source)
+    {:ok, program} = CL10.create_program_with_source(context, @kernel_source)
     CL10.build_program(program, devices)
     {:ok, kernel} = CL10.create_kernel(program, 'HelloWorld')
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
