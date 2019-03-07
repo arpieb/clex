@@ -232,7 +232,7 @@ defmodule Clex.CL10Test do
     {:ok, devices} = CL10.get_device_ids(platform, :all)
     {:ok, context} = CL10.create_context(devices)
 
-    {:ok, formats} = CL10.get_supported_image_formats(context, [], :image2d)
+    {:ok, formats} = CL10.get_supported_image_formats(context, [:read_only], :image2d)
     assert is_list(formats)
   end
 
