@@ -1,9 +1,9 @@
-defmodule Clex.CL10 do
+defmodule Clex.CL11 do
   @moduledoc ~S"""
-  Provides an interface into the [OpenCL 1.0 API](https://www.khronos.org/registry/OpenCL/sdk/1.0/docs/man/xhtml/).
+  Provides an interface into the [OpenCL 1.1 API](https://www.khronos.org/registry/OpenCL/sdk/1.1/docs/man/xhtml/).
   """
 
-  # Selectively pull in functions + docs from Clex.CL for OpenCL 1.0
+  # Selectively pull in functions + docs from Clex.CL for OpenCL 1.1
   use Clex.VersionedApi
 
   # Platform
@@ -17,8 +17,8 @@ defmodule Clex.CL10 do
   # Context
   add_cl_func :create_context, [devices]
   add_cl_func :create_context_from_type, [platform, device_type]
-  add_cl_func :release_context, [context]
   add_cl_func :retain_context, [context]
+  add_cl_func :release_context, [context]
   add_cl_func :get_context_info, [context]
 
   # Command Queues
@@ -30,10 +30,14 @@ defmodule Clex.CL10 do
   # Memory Object
   add_cl_func :create_buffer, [context, flags, size]
   add_cl_func :create_buffer, [context, flags, size, data]
+  add_cl_func :create_sub_buffer, [buffer, flags, type, origin, size]
   add_cl_func :enqueue_read_buffer, [queue, buffer, offset, size, waitlist]
   add_cl_func :enqueue_write_buffer, [queue, buffer, offset, size, data, waitlist]
+  add_cl_func :enqueue_read_buffer_rect, [queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist]
+  add_cl_func :enqueue_write_buffer_rect, [queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist]
   add_cl_func :retain_mem_object, [buffer]
   add_cl_func :release_mem_object, [buffer]
+  # clSetMemObjectDestructorCallback
   add_cl_func :create_image2d, [context, flags, image_format, width, height, row_pitch, data]
   add_cl_func :create_image3d, [context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data]
   add_cl_func :get_supported_image_formats, [context, flags, image_type]
@@ -42,6 +46,7 @@ defmodule Clex.CL10 do
   add_cl_func :enqueue_copy_image, [queue, src_image, dest_image, src_origin, dest_origin, region, waitlist]
   add_cl_func :enqueue_copy_image_to_buffer, [queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist]
   add_cl_func :enqueue_copy_buffer, [queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist]
+  add_cl_func :enqueue_copy_buffer_rect, [queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist]
   add_cl_func :enqueue_copy_buffer_to_image, [queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist]
   add_cl_func :get_mem_object_info, [buffer]
   add_cl_func :get_image_info, [image]
@@ -78,8 +83,11 @@ defmodule Clex.CL10 do
   # clEnqueueNativeKernel
 
   # Event Objects
+  # clCreateUserEvent
+  # clSetUserEventStatus
   add_cl_func :wait_for_events, [waitlist]
   add_cl_func :get_event_info, [event]
+  # clSetEventCallback
   add_cl_func :retain_event, [event]
   add_cl_func :release_event, [event]
 

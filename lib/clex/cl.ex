@@ -1,6 +1,6 @@
 defmodule Clex.CL do
   @moduledoc ~S"""
-  This module provides a wrapper for all OpenCL API calls exported by the :cl module
+  This module provides a wrapper for OpenCL API functions and types exported by the [`:cl`](https://github.com/tonyrog/cl) Erlang module in addition to some convenience revisions to make the functions more idiomatic Elixir where possible.
   """
 
   require Clex.CL.ImageFormat
@@ -238,11 +238,11 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create a memory buffer from a region in an existing memory buffer for the given flags, offset and size.
+  Create a memory buffer from a region in an existing memory buffer for the given flags, origin, and size.
   """
-  @spec create_sub_buffer(buffer::cl_mem, flags::list(cl_mem_flag), type::cl_buffer_create_type, offset::non_neg_integer, size::non_neg_integer) :: {:ok, cl_mem} | {:error, cl_error}
-  def create_sub_buffer(buffer, flags, type, offset, size) do
-    :cl.create_sub_buffer(buffer, flags, type, [offset, size])
+  @spec create_sub_buffer(buffer::cl_mem, flags::list(cl_mem_flag), type::cl_buffer_create_type, origin::non_neg_integer, size::non_neg_integer) :: {:ok, cl_mem} | {:error, cl_error}
+  def create_sub_buffer(buffer, flags, type, origin, size) do
+    :cl.create_sub_buffer(buffer, flags, type, [origin, size])
   end
 
   @doc ~S"""
@@ -352,6 +352,30 @@ defmodule Clex.CL do
   @spec get_image_info(image::cl_mem) :: {:ok, keyword()} | {:error, cl_error}
   def get_image_info(image) do
     :cl.get_image_info(image)
+  end
+
+  @doc ~S"""
+  Enqueue commands to read from a rectangular region from a buffer object to host memory.
+  """
+  @spec enqueue_read_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist) do
+    :cl.enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueue commands to write a rectangular region to a buffer object from host memory.
+  """
+  @spec enqueue_write_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist) do
+    :cl.enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to copy a rectangular region from the buffer object to another buffer object.
+  """
+  @spec enqueue_copy_buffer_rect(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), src_row_pitch::non_neg_integer, src_slice_pitch::non_neg_integer, dest_row_pitch::non_neg_integer, dest_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist) do
+    :cl.enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist)
   end
 
   ########################################
@@ -758,7 +782,7 @@ defmodule Clex.CL do
   in a command-queue are issued to the associated device and have
   completed.
 
-  `Clex.CL.aync_finish/1` does not block until all queued commands in command_queue
+  `Clex.CL.async_finish/1` does not block until all queued commands in command_queue
   have been processed and completed, and there is no guarantee that all commands have been completed at return time.
   """
   @spec async_finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
