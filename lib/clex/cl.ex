@@ -375,6 +375,7 @@ defmodule Clex.CL do
   """
   @spec enqueue_copy_buffer_rect(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), src_row_pitch::non_neg_integer, src_slice_pitch::non_neg_integer, dest_row_pitch::non_neg_integer, dest_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist) do
+    # TODO something in the event handler for this function has an issue; tends to segfault when calling wait_for_events/1. :(
     :cl.enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist)
   end
 
