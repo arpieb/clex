@@ -167,7 +167,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_read_buffer(queue, buffer, 0, size, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_write_buffer" do
@@ -182,7 +184,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_read_buffer_rect" do
@@ -199,7 +203,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, 0, 0, 0, 0, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_write_buffer_rect" do
@@ -219,7 +225,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, 0, 0, 0, 0, data, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "retain_mem_object" do
@@ -298,7 +306,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_write_image" do
@@ -317,7 +327,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_copy_image" do
@@ -337,7 +349,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_copy_image_to_buffer" do
@@ -357,7 +371,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_copy_buffer" do
@@ -373,7 +389,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_copy_buffer_rect" do
@@ -392,7 +410,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_copy_buffer_rect(queue, src, dest, src_origin, dest_origin, region, 0, 0, 0, 0, [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "enqueue_copy_buffer_to_image" do
@@ -412,7 +432,9 @@ defmodule Clex.CL11Test do
     {:ok, event} = CL11.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
     assert {:event_t, id, reference} = event
 
+    CL11.flush(queue)
     CL11.finish(queue)
+    CL11.release_queue(queue)
   end
 
   test "get_mem_object_info" do
