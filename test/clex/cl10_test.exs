@@ -156,7 +156,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_read_buffer(queue, buffer, 0, size, [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_write_buffer" do
@@ -171,7 +172,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value, [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "retain_mem_object" do
@@ -250,7 +252,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_write_image" do
@@ -269,7 +272,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_copy_image" do
@@ -289,7 +293,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_copy_image_to_buffer" do
@@ -309,7 +314,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_copy_buffer" do
@@ -325,7 +331,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize, [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "enqueue_copy_buffer_to_image" do
@@ -345,7 +352,8 @@ defmodule Clex.CL10Test do
     {:ok, event} = CL10.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
     assert {:event_t, id, reference} = event
 
-    CL10.finish(queue)
+    CL10.flush(queue)
+    CL10.wait_for_events([event])
   end
 
   test "get_mem_object_info" do
