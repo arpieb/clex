@@ -4,6 +4,7 @@ defmodule Clex.CL do
   """
 
   require Clex.CL.ImageFormat
+  require Clex.CL.ImageDesc
 
   @opaque cl_platform               :: {:platform_t, any, reference}
   @opaque cl_device                 :: {:device_t, any, reference}
@@ -40,6 +41,7 @@ defmodule Clex.CL do
 
   # Records
   @type   cl_image_format           :: Clex.CL.ImageFormat.t
+  @type   cl_image_desc             :: Clex.CL.ImageDesc.t
 
   ########################################
   # Platform
@@ -379,6 +381,38 @@ defmodule Clex.CL do
     :cl.enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist)
   end
 
+  @doc ~S"""
+  Enqueues a command to fill a buffer object with a pattern of a given pattern size.
+  """
+  @spec enqueue_fill_buffer(queue::cl_command_queue, buffer::cl_mem, pattern::binary, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist) do
+    :cl.enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist)
+  end
+
+  @doc ~S"""
+  Creates a 1D image, 1D image buffer, 1D image array, 2D image, 2D image array or 3D image object.
+  """
+  @spec create_image(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, image_desc::cl_image_desc, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
+  def create_image(context, flags, image_format, image_desc, data) do
+    :cl.create_image(context, flags, image_format, image_desc, data)
+  end
+
+  @doc ~S"""
+  Enqueues a command to fill an image object with a specified color.
+  """
+  @spec enqueue_fill_image(queue::cl_command_queue, image::cl_mem, fill_color::binary, origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_fill_image(queue, image, fill_color, origin, region, waitlist) do
+    :cl.enqueue_fill_image(queue, image, fill_color, origin, region, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a command to indicate which device a set of memory objects should be associated with.
+  """
+  @spec enqueue_migrate_mem_objects(queue::cl_command_queue, mem_objects::list(cl_mem), flags::[:host | :content_undefined], waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist) do
+    :cl.enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist)
+  end
+
   ########################################
   # Sampler
   ########################################
@@ -510,11 +544,27 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
+  Asynchronously compile a program for the given devices using the options.
+  """
+  @spec async_compile_program(program::cl_program, devices::list(cl_device), options::binary, headers::list(cl_program), names::list(binary)) :: :ok | {:error, cl_error}
+  def async_compile_program(program, devices, options, headers, names) do
+    :cl.async_compile_program(program, devices, options, headers, names)
+  end
+
+  @doc ~S"""
   Links a collection of programs for the given devices and context.
   """
   @spec link_program(context::cl_context, devices::list(cl_device), options::binary, programs::list(cl_program)) :: {:ok, cl_program} | {:error, cl_error}
   def link_program(context, devices, options, programs) do
     :cl.link_program(context, devices, options, programs)
+  end
+
+  @doc ~S"""
+  Asynchronously links a collection of programs for the given devices and context.
+  """
+  @spec async_link_program(context::cl_context, devices::list(cl_device), options::binary, programs::list(cl_program)) :: {:ok, cl_program} | {:error, cl_error}
+  def async_link_program(context, devices, options, programs) do
+    :cl.async_link_program(context, devices, options, programs)
   end
 
   @doc ~S"""
@@ -732,6 +782,22 @@ defmodule Clex.CL do
   @spec wait_for_events(waitlist::list(cl_event)) :: list({:ok, any} | {:error, cl_error})
   def wait_for_events(waitlist) do
     :cl.wait_for_events(waitlist)
+  end
+
+  @doc ~S"""
+  Enqueues a marker command which waits for either a list of events to complete, or all previously enqueued commands to complete.
+  """
+  @spec enqueue_marker_with_wait_list(queue::cl_command_queue, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_marker_with_wait_list(queue, waitlist) do
+    :cl.enqueue_marker_with_wait_list(queue, waitlist)
+  end
+
+  @doc ~S"""
+  A synchronization point that enqueues a barrier operation.
+  """
+  @spec enqueue_barrier_with_wait_list(queue::cl_command_queue, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_barrier_with_wait_list(queue, waitlist) do
+    :cl.enqueue_barrier_with_wait_list(queue, waitlist)
   end
 
   ########################################
