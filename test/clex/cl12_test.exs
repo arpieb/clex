@@ -1,6 +1,7 @@
 defmodule Clex.CL12Test do
   use ExUnit.Case
   use Clex.CL.ImageFormat
+  use Clex.CL.ImageDesc
 
   alias Clex.CL12
 
@@ -61,15 +62,21 @@ defmodule Clex.CL12Test do
   ########################################
 
   test "create_sub_devices" do
-    flunk "TODO"
+    # TODO find a way to properly test this since some devices don't support partitioning
   end
 
   test "retain_device" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, [device | _]} = CL12.get_device_ids(platform, :all)
+
+    assert :ok == CL12.retain_device(device)
   end
 
   test "release_device" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, [device | _]} = CL12.get_device_ids(platform, :all)
+
+    assert :ok == CL12.release_device(device)
   end
 
   ########################################
@@ -104,6 +111,7 @@ defmodule Clex.CL12Test do
   test "get_context_info" do
     {:ok, [platform | _]} = CL12.get_platform_ids()
     {:ok, context} = CL12.create_context_from_type(platform, :all)
+
     {:ok, info} = CL12.get_context_info(context)
     assert Keyword.keyword?(info)
   end
@@ -137,7 +145,13 @@ defmodule Clex.CL12Test do
   end
 
   test "get_queue_info" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    {:ok, info} = CL12.get_queue_info(queue)
+    assert Keyword.keyword?(info)
   end
 
   ########################################
@@ -247,7 +261,19 @@ defmodule Clex.CL12Test do
   end
 
   test "enqueue_fill_buffer" do
-    flunk "TODO"
+    value = <<0, 1, 2, 3>>
+    size = byte_size(value)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, buffer} = CL12.create_buffer(context, [:read_write], size * 8)
+
+    {:ok, event} = CL12.enqueue_fill_buffer(queue, buffer, value, 0, size * 8, [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_copy_buffer" do
@@ -288,7 +314,19 @@ defmodule Clex.CL12Test do
   end
 
   test "create_image" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+
+    {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+    assert {:mem_t, id, reference} = image
   end
 
   test "get_supported_image_formats" do
@@ -301,119 +339,151 @@ defmodule Clex.CL12Test do
   end
 
   test "enqueue_read_image" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#
-#    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
-#    w = 256
-#    h = 256
-#    data_size = w * h * 4 * 8
-#    data = <<0::size(data_size)>>
-#    {:ok, image} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#
-#    {:ok, event} = CL12.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
-#    assert {:event_t, id, reference} = event
-#
-#    CL12.flush(queue)
-#    CL12.wait_for_events([event])
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+
+    {:ok, event} = CL12.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_write_image" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#
-#    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
-#    w = 256
-#    h = 256
-#    data_size = w * h * 4 * 8
-#    data = <<0::size(data_size)>>
-#    {:ok, image} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#
-#    {:ok, event} = CL12.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
-#    assert {:event_t, id, reference} = event
-#
-#    CL12.flush(queue)
-#    CL12.wait_for_events([event])
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+
+    {:ok, event} = CL12.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_fill_image" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+
+    fill_color = <<0::size(128)>>
+    origin = [0, 0, 0]
+    region = [10, 10, 1]
+    {:ok, event} = CL12.enqueue_fill_image(queue, image, fill_color, origin, region, [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_copy_image" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#
-#    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
-#    w = 256
-#    h = 256
-#    data_size = w * h * 4 * 8
-#    data = <<0::size(data_size)>>
-#    {:ok, src} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#    {:ok, dest} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#
-#    {:ok, event} = CL12.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
-#    assert {:event_t, id, reference} = event
-#
-#    CL12.flush(queue)
-#    CL12.wait_for_events([event])
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, src} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+    {:ok, dest} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+
+    {:ok, event} = CL12.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_copy_image_to_buffer" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#
-#    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
-#    w = 256
-#    h = 256
-#    data_size = w * h * 4 * 8
-#    data = <<0::size(data_size)>>
-#    {:ok, src} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#    {:ok, buffer} = CL12.create_buffer(context, [:read_write], byte_size(data))
-#
-#    {:ok, event} = CL12.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
-#    assert {:event_t, id, reference} = event
-#
-#    CL12.flush(queue)
-#    CL12.wait_for_events([event])
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, src} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+    {:ok, buffer} = CL12.create_buffer(context, [:read_write], byte_size(data))
+
+    {:ok, event} = CL12.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_copy_buffer_to_image" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#
-#    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
-#    w = 256
-#    h = 256
-#    data_size = w * h * 4 * 8
-#    data = <<0::size(data_size)>>
-#    {:ok, dest} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#    {:ok, src} = CL12.create_buffer(context, [:read_write], byte_size(data))
-#
-#    {:ok, event} = CL12.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
-#    assert {:event_t, id, reference} = event
-#
-#    CL12.flush(queue)
-#    CL12.wait_for_events([event])
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, dest} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+    {:ok, src} = CL12.create_buffer(context, [:read_write], byte_size(data))
+
+    {:ok, event} = CL12.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "enqueue_migrate_mem_objects" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, buffer} = CL12.create_buffer(context, [:read_write], 1024)
+
+    flags = [:host]
+    mem_objects = [buffer]
+    {:ok, event} = CL12.enqueue_migrate_mem_objects(queue, mem_objects, flags, [])
+    assert {:event_t, id, reference} = event
+
+    CL12.flush(queue)
+    CL12.wait_for_events([event])
   end
 
   test "get_mem_object_info" do
@@ -429,20 +499,20 @@ defmodule Clex.CL12Test do
   end
 
   test "get_image_info" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#
-#    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
-#    w = 256
-#    h = 256
-#    data_size = w * h * 4 * 8
-#    data = <<0::size(data_size)>>
-#    {:ok, image} = CL12.create_image2d(context, [:read_write], img_format, w, h, 0, data)
-#
-#    {:ok, info} = CL12.get_image_info(image)
-#    assert Keyword.keyword?(info)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+
+    img_format = cl_image_format(order: :rgba, type: :unsigned_int8)
+    w = 256
+    h = 256
+    data_size = w * h * 4 * 8
+    data = <<0::size(data_size)>>
+    img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
+    {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
+
+    {:ok, info} = CL12.get_image_info(image)
+    assert Keyword.keyword?(info)
   end
 
   test "retain_mem_object" do
@@ -521,7 +591,7 @@ defmodule Clex.CL12Test do
   end
 
   test "create_program_with_builtin_kernels" do
-    flunk "TODO"
+    # TODO find some way to test this dynamically as built-in kernels are device-specific
   end
 
   test "retain_program" do
@@ -552,23 +622,77 @@ defmodule Clex.CL12Test do
   end
 
   test "compile_program" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
+
+    options = ''
+    headers = []
+    names = []
+    assert :ok == CL12.compile_program(program, devices, options, headers, names)
   end
 
   test "async_compile_program" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
+
+    options = ''
+    headers = []
+    names = []
+    {:ok, ref} = CL12.async_compile_program(program, devices, options, headers, names)
+    assert is_reference(ref)
+
+    reply = receive do
+      {:cl_async, _ref, reply} -> reply
+    end
+
+    assert :ok == reply
   end
 
   test "link_program" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
+
+    options = ''
+    headers = []
+    names = []
+    CL12.compile_program(program, devices, options, headers, names)
+
+    options = ''
+    {:ok, linked_program} = CL12.link_program(context, devices, options, [program])
+    assert {:program_t, id, reference} = linked_program
   end
 
   test "async_link_program" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
+
+    options = ''
+    headers = []
+    names = []
+    CL12.compile_program(program, devices, options, headers, names)
+
+    options = ''
+    {:ok, {ref, linked_program}} = CL12.async_link_program(context, devices, options, [program])
+    assert is_reference(ref)
+
+    receive do
+      {:cl_async, _ref, :ok} -> {:ok, linked_program}
+    end
+
+    assert {:program_t, id, reference} = linked_program
   end
 
   test "unload_platform_compiler" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    assert :ok == CL12.unload_platform_compiler(platform)
   end
 
   test "get_program_info" do
@@ -715,53 +839,49 @@ defmodule Clex.CL12Test do
   ########################################
 
   test "wait_for_events" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#
-#    events = []
-#    {:ok, event} = CL12.enqueue_marker(queue)
-#    events = [event | events]
-#    {:ok, event} = CL12.enqueue_marker(queue)
-#    events = [event | events]
-#
-#    assert is_list(CL12.wait_for_events(events))
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+
+    events = []
+    {:ok, event} = CL12.enqueue_marker_with_wait_list(queue, [])
+    events = [event | events]
+    {:ok, event} = CL12.enqueue_marker_with_wait_list(queue, [])
+    events = [event | events]
+
+    assert is_list(CL12.wait_for_events(events))
   end
 
   test "get_event_info" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#    {:ok, event} = CL12.enqueue_marker(queue)
-#
-#    {:ok, info} = CL12.get_event_info(event)
-#    assert Keyword.keyword?(info)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, event} = CL12.enqueue_marker_with_wait_list(queue, [])
+
+    {:ok, info} = CL12.get_event_info(event)
+    assert Keyword.keyword?(info)
   end
 
   test "retain_event" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#    {:ok, event} = CL12.enqueue_marker(queue)
-#
-#    assert :ok == CL12.retain_event(event)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, event} = CL12.enqueue_marker_with_wait_list(queue, [])
+
+    assert :ok == CL12.retain_event(event)
   end
 
   test "release_event" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#    {:ok, event} = CL12.enqueue_marker(queue)
-#
-#    assert :ok == CL12.release_event(event)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, event} = CL12.enqueue_marker_with_wait_list(queue, [])
+
+    assert :ok == CL12.release_event(event)
   end
 
   ########################################
@@ -769,11 +889,23 @@ defmodule Clex.CL12Test do
   ########################################
 
   test "enqueue_marker_with_wait_list" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, event} = CL12.enqueue_marker_with_wait_list(queue, [])
+
+    assert {:event_t, id, reference} = event
   end
 
   test "enqueue_barrier_with_wait_list" do
-    flunk "TODO"
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, event} = CL12.enqueue_barrier_with_wait_list(queue, [])
+
+    assert {:event_t, id, reference} = event
   end
 
   ########################################
@@ -781,25 +913,23 @@ defmodule Clex.CL12Test do
   ########################################
 
   test "flush" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#    {:ok, _event} = CL12.enqueue_marker(queue)
-#
-#    assert :ok == CL12.flush(queue)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, _event} = CL12.enqueue_marker_with_wait_list(queue, [])
+
+    assert :ok == CL12.flush(queue)
   end
 
   test "finish" do
-    flunk "TODO"
-#    {:ok, [platform | _]} = CL12.get_platform_ids()
-#    {:ok, devices} = CL12.get_device_ids(platform, :all)
-#    {:ok, context} = CL12.create_context(devices)
-#    {:ok, queue} = CL12.create_queue(context, hd(devices))
-#    {:ok, _event} = CL12.enqueue_marker(queue)
-#
-#    assert :ok == CL12.finish(queue)
+    {:ok, [platform | _]} = CL12.get_platform_ids()
+    {:ok, devices} = CL12.get_device_ids(platform, :all)
+    {:ok, context} = CL12.create_context(devices)
+    {:ok, queue} = CL12.create_queue(context, hd(devices))
+    {:ok, _event} = CL12.enqueue_marker_with_wait_list(queue, [])
+
+    assert :ok == CL12.finish(queue)
   end
 
 end

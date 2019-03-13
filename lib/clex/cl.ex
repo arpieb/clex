@@ -38,6 +38,7 @@ defmodule Clex.CL do
                                        :signed_int8 | :signed_int16 | :signed_int32 |
                                        :unsigned_int8 | :unsigned_int16 | :unsigned_int32 |
                                        :half_float | :float
+  @type   cl_mem_migration_flags    :: :host | :content_undefined
 
   # Records
   @type   cl_image_format           :: Clex.CL.ImageFormat.t
@@ -408,7 +409,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Enqueues a command to indicate which device a set of memory objects should be associated with.
   """
-  @spec enqueue_migrate_mem_objects(queue::cl_command_queue, mem_objects::list(cl_mem), flags::[:host | :content_undefined], waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  @spec enqueue_migrate_mem_objects(queue::cl_command_queue, mem_objects::list(cl_mem), flags::list(cl_mem_migration_flags), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist) do
     :cl.enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist)
   end

@@ -19,12 +19,12 @@ defmodule Clex.CL.ImageDesc do
                slice_pitch: non_neg_integer,
                num_mip_levels: non_neg_integer,
                num_samples: non_neg_integer,
-               buffer: Clex.CL.cl_mem
+               buffer: Clex.CL.cl_mem | :undefined
              )
   Record.defrecord(:cl_image_desc, type: nil,
-    width: nil, height: nil, depth: nil,
-    array_size: nil, row_pitch: nil, slice_pitch: nil,
-    num_mip_levels: nil, num_samples: nil, buffer: nil
+    width: nil, height: nil, depth: 1,
+    array_size: 1, row_pitch: 0, slice_pitch: 0,
+    num_mip_levels: 0, num_samples: 0, buffer: :undefined
   )
 
 end
