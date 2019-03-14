@@ -1,6 +1,6 @@
 defmodule Clex.VersionedApi do
   @moduledoc false
-  # Defines the `versioned_api` macro to pull the function-level docs and map calls to Clex.CL module.
+  # Defines the `add_cl_func` macro to pull the function-level docs and map calls to Clex.CL module.
 
   defmacro __using__(_opts) do
     quote do
@@ -22,28 +22,14 @@ defmodule Clex.VersionedApi do
   ```
   """
   defmacro add_cl_func(name, args) do
-    # Make sure the module(s) we need to be compiled for our macros, are.
-    Code.ensure_compiled(Clex.CL)
-
-    arity = Kernel.length(args)
-    fn_doc =
-      case Code.fetch_docs(Clex.CL) do
-        {:docs_v1, _annotation, :elixir, _format, _module_doc, _metadata, docs} ->
-          case List.keyfind(docs, {:function, name, arity}, 0) do
-            {_key, _annotation, _sig, %{"en" => fn_doc}, _meta} -> fn_doc
-            _ -> ""
-          end
-        _ -> ""
-      end
+    arity = length(args)
 
     quote do
       @doc """
-      #{unquote(fn_doc)}
-
       See `Clex.CL.#{unquote(name)}/#{unquote(arity)}` for full function parameter specification.
       """
       def unquote(name)(unquote_splicing(args)) do
-        apply(Clex.CL, unquote(name), [unquote_splicing(args)])
+        Clex.CL.unquote(name)(unquote_splicing(args))
       end
     end
   end

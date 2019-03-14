@@ -3,9 +3,7 @@ defmodule Clex.CL do
   This module provides a wrapper for OpenCL API functions and types exported by the [`:cl`](https://github.com/tonyrog/cl) Erlang module in addition to some convenience revisions to make the functions more idiomatic Elixir where possible.
   """
 
-  require Clex.CL.ImageFormat
-  require Clex.CL.ImageDesc
-
+  # OpenCL object types
   @opaque cl_platform               :: {:platform_t, any, reference}
   @opaque cl_device                 :: {:device_t, any, reference}
   @opaque cl_context                :: {:context_t, any, reference}
@@ -17,6 +15,7 @@ defmodule Clex.CL do
   @opaque cl_event                  :: {:event_t, any, reference}
   @type   cl_error                  :: any
 
+  # OpenCL flags and properties
   @type   cl_device_type            :: :gpu | :cpu | :accelerator | :custom | :all | :default
   @type   cl_sub_devices_property   :: {:equally, non_neg_integer} |
                                        {:by_counts, [non_neg_integer]} |
@@ -41,12 +40,11 @@ defmodule Clex.CL do
   @type   cl_mem_migration_flags    :: :host | :content_undefined
 
   # Records
+  require Clex.CL.ImageFormat
+  require Clex.CL.ImageDesc
+
   @type   cl_image_format           :: Clex.CL.ImageFormat.t
   @type   cl_image_desc             :: Clex.CL.ImageDesc.t
-
-  ########################################
-  # Platform
-  ########################################
 
   @doc ~S"""
   Query the OpenCL driver for all available compute platforms
@@ -63,10 +61,6 @@ defmodule Clex.CL do
   def get_platform_info(platform) do
     :cl.get_platform_info(platform)
   end
-
-  ########################################
-  # Devices
-  ########################################
 
   @doc ~S"""
   Query a platform for all devices of a certain type.
@@ -114,10 +108,6 @@ defmodule Clex.CL do
   def retain_device(device) do
     :cl.retain_device(device)
   end
-
-  ########################################
-  # Context
-  ########################################
 
   @doc ~S"""
   Create an OpenCL context from one or more devices.
@@ -171,10 +161,6 @@ defmodule Clex.CL do
     :cl.get_context_info(context)
   end
 
-  ########################################
-  # Command Queue
-  ########################################
-
   @doc ~S"""
   Create a command queue for processing OpenCL commands, with properties.
   """
@@ -219,10 +205,6 @@ defmodule Clex.CL do
   def get_queue_info(queue) do
     :cl.get_queue_info(queue)
   end
-
-  ########################################
-  # Memory Object
-  ########################################
 
   @doc ~S"""
   Create a memory buffer in the given context, of the requested size, configured by the given flags.
@@ -414,10 +396,6 @@ defmodule Clex.CL do
     :cl.enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist)
   end
 
-  ########################################
-  # Sampler
-  ########################################
-
   @doc ~S"""
   Creates a sampler object.
   """
@@ -454,10 +432,6 @@ defmodule Clex.CL do
   def get_sampler_info(sampler) do
     :cl.get_sampler_info(sampler)
   end
-
-  ########################################
-  # Program
-  ########################################
 
   @doc ~S"""
   Create a program in the given context from the provided source.
@@ -584,10 +558,6 @@ defmodule Clex.CL do
     :cl.get_program_build_info(program, device)
   end
 
-  ########################################
-  # Kernel
-  ########################################
-
   @doc ~S"""
   Create a kernel object for the named function found in the given program.
   """
@@ -656,10 +626,6 @@ defmodule Clex.CL do
   def get_kernel_arg_info(kernel) do
     :cl.get_kernel_arg_info(kernel)
   end
-
-  ########################################
-  # Events
-  ########################################
 
   @doc ~S"""
   Enqueues a command to execute a kernel on a device.
@@ -800,10 +766,6 @@ defmodule Clex.CL do
   def enqueue_barrier_with_wait_list(queue, waitlist) do
     :cl.enqueue_barrier_with_wait_list(queue, waitlist)
   end
-
-  ########################################
-  # Misc
-  ########################################
 
   @doc ~S"""
   Blocking request issues all previously queued OpenCL commands in a command queue to the device associated with the

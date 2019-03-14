@@ -41,7 +41,7 @@ defmodule Clex.MixProject do
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:ex_doc, "~> 0.19.3", only: :dev},
-      {:cl, git: "https://github.com/arpieb/cl.git", branch: "master"},
+      {:cl, git: "https://github.com/tonyrog/cl.git", ref: "0e49a47e78a1eb207c9968a2453447c55adbc3f9"},
     ]
   end
 
