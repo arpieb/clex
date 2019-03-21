@@ -46,8 +46,12 @@ defmodule Clex.CL do
   @type   cl_image_format           :: Clex.CL.ImageFormat.t
   @type   cl_image_desc             :: Clex.CL.ImageDesc.t
 
+  ############################################################
+  # Platform
+  ############################################################
+
   @doc ~S"""
-  Query the OpenCL driver for all available compute platforms
+  Obtain the list of platforms available.
   """
   @spec get_platform_ids() :: {:ok, list(cl_platform)} | {:error, cl_error}
   def get_platform_ids() do
@@ -55,17 +59,32 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Query a platform for all properties
+  Get specific information about the OpenCL platform.
+
+  ### Parameters
+
+  `platform` \
+  A platform ID returned by `get_platform_ids/0`.
   """
   @spec get_platform_info(platform::cl_platform) :: {:ok, keyword()} | {:error, cl_error}
   def get_platform_info(platform) do
     :cl.get_platform_info(platform)
   end
 
-  @doc ~S"""
-  Query a platform for all devices of a certain type.
+  ############################################################
+  # Devices
+  ############################################################
 
-  Type can be one of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
+  @doc ~S"""
+  Obtain the list of devices available on a platform.
+
+  ### Parameters
+
+  `platform` \
+  A platform ID returned by `get_platform_ids/0`.
+
+  `device_type` \
+  One of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
   """
   @spec get_device_ids(platform::cl_platform, device_type::cl_device_type) :: {:ok, list(cl_device)} | {:error, cl_error}
   def get_device_ids(platform, device_type) do
@@ -73,7 +92,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Query a device for all properties
+  Get information about an OpenCL device.
+
+  ### Parameters
+
+  `device` \
+  Device reference returned by `get_device_ids/2` or a sub-device created by `create_sub_devices/2`.  If `device` is a sub-device, the specific information for the sub-device will be returned.
   """
   @spec get_device_info(device::cl_device) :: {:ok, keyword()} | {:error, cl_error}
   def get_device_info(device) do
@@ -81,7 +105,22 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Partition the given device into one or more logical subdevices by the criteria given by `property`.
+  Creates an array of sub-devices that each reference a non-intersecting set of compute units within the provided `device`, using criteria
+  provided in `property`.
+
+  ### Parameters
+
+  `device` \
+  The device to be partitioned.
+
+  `property` \
+  Specifies how `device` is to be partition described by a partition scheme. The list of supported partitioning schemes is described in the table below. Only one of the listed partitioning schemes can be specified in `property`.
+
+  Property                             | Description
+  :----------------------------------- | :---------
+  `{:equally, n::non_neg_integer}`     | Split the aggregate device into as many smaller aggregate devices as can be created, each containing `n` compute units. The value n is passed as the value accompanying this property. If n does not divide evenly into `:partition_max_compute_units`, then the remaining compute units are not used.
+  `{:by_counts, [m::non_neg_integer]}` | This property is followed by a list of compute unit counts. For each nonzero count `m` in the list, a sub-device is created with `m` compute units in it. The number of non-zero count entries in the list may not exceed `:partition_max_sub_devices`. The total number of compute units specified may not exceed `:partition_max_compute_units`.
+  `{:by_affinity_domain, domain}`      | Split the device into smaller aggregate devices containing one or more compute units that all share part of a cache hierarchy. The value accompanying this property may be drawn from the following list: `:numa`, `:l4_cache`, `:l3_cache`, `:l2_cache`, `:l1_cache`, `:next_partitionable`.
   """
   @spec create_sub_devices(device::cl_device, property::cl_sub_devices_property) :: {:ok, list(cl_device)} | {:error, cl_error}
   def create_sub_devices(device, property) do
@@ -89,10 +128,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Decrement the reference count on a device.
+  Decrements the `device` reference count.
 
-  Once the reference count goes to zero and all attached resources are released, the device is deleted.
-  To increment the reference count, see `Clex.CL.retain_device/1`.
+  To increment the reference count, see `retain_device/1`.
   """
   @spec release_device(device::cl_device) :: :ok | {:error, cl_error}
   def release_device(device) do
@@ -100,17 +138,26 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Increment the reference count on a device.
+  Increments the `device` reference count.
 
-  To decrement the reference count, see `Clex.CL.release_device/1`.
+  To decrement the reference count, see `release_device/1`.
   """
   @spec retain_device(device::cl_device) :: :ok | {:error, cl_error}
   def retain_device(device) do
     :cl.retain_device(device)
   end
 
+  ############################################################
+  # Context
+  ############################################################
+
   @doc ~S"""
-  Create an OpenCL context from one or more devices.
+  Creates an OpenCL context.
+
+  ### Parameters
+
+  `devices` \
+  List of device references returned by `get_device_ids/2` or sub-devices created by `create_sub_devices/2`.
   """
   @spec create_context(devices::list(cl_device)) :: {:ok, cl_context} | {:error, cl_error}
   def create_context(devices) do
@@ -118,9 +165,15 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create an OpenCL context from all devices of the given type.
+  Create an OpenCL context from a device type that identifies the specific device(s) to use.
 
-  Type can be one of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
+  ### Parameters
+
+  `platform` \
+  A platform ID returned by `get_platform_ids/0`.
+
+  `device_type` \
+  One of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
   """
   @spec create_context_from_type(platform::cl_platform, device_type::cl_device_type) :: {:ok, cl_context} | {:error, cl_error}
   def create_context_from_type(platform, device_type) do
@@ -133,10 +186,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Decrement the reference count on a context.
+  Decrement the `context` reference count.
 
-  Once the reference count goes to zero and all attached resources are released, the context is deleted.
-  To increment the reference count, see `Clex.CL.retain_context/1`.
+  To increment the reference count, see `retain_context/1`.
   """
   @spec release_context(context::cl_context) :: :ok | {:error, cl_error}
   def release_context(context) do
@@ -144,9 +196,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Increment the reference count on a context.
+  Increment the `context` reference count.
 
-  To decrement the reference count, see `Clex.CL.release_context/1`.
+  To decrement the reference count, see `release_context/1`.
   """
   @spec retain_context(context::cl_context) :: :ok | {:error, cl_error}
   def retain_context(context) do
@@ -154,15 +206,42 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Query a context for all properties
+  Query information about a context.
+
+  ### Parameters
+
+  `context` \
+  Specifies the OpenCL context being queried.
   """
   @spec get_context_info(context::cl_context) :: {:ok, keyword()} | {:error, cl_error}
   def get_context_info(context) do
     :cl.get_context_info(context)
   end
 
+  ############################################################
+  # Command Queues
+  ############################################################
+
   @doc ~S"""
-  Create a command queue for processing OpenCL commands, with properties.
+  Create a command-queue on a specific device.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context
+
+  `device` \
+  Must be a device associated with context. It can either be in the list of devices specified when context is created using `create_context/1` or have the same device type as the device type specified when the context is created using `create_context_from_type/2`.
+
+  `properties` \
+  Specifies a list of properties for the command-queue. Only command-queue properties specified in the table below can be set in properties; otherwise the value specified in `properties` is considered to be not valid
+
+  Property                             | Description
+  :----------------------------------- | :---------
+  `:out_of_order_exec_mode_enable`       | Determines whether the commands queued in the command-queue are executed in-order or out-of-order. If set, the commands in the command-queue are executed out-of-order. Otherwise, commands are executed in-order.
+  `:profiling_enabled`                   | Enable or disable profiling of commands in the command-queue. If set, the profiling of commands is enabled. Otherwise profiling of commands is disabled.
+
+  _Note that `clGetEventProfiling` is not implemented yet in Clex, so `:profiling_enabled` is essentially a NOOP._
   """
   @spec create_queue(context::cl_context, device::cl_device, properties::list(cl_command_queue_property)) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device, properties) do
@@ -170,7 +249,15 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create a command queue for processing OpenCL commands.
+  Create a command-queue on a specific device with default properties.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context
+
+  `device` \
+  Must be a device associated with context. It can either be in the list of devices specified when context is created using `create_context/1` or have the same device type as the device type specified when the context is created using `create_context_from_type/2`.
   """
   @spec create_queue(context::cl_context, device::cl_device) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device) do
@@ -178,10 +265,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Decrement the reference count on a command queue.
+  Decrements the `queue` reference count.
 
-  Once the reference count goes to zero and all attached resources are released, the queue is deleted.
-  To increment the reference count, see `Clex.CL.retain_queue/1`.
+  To increment the reference count, see `retain_queue/1`.
   """
   @spec release_queue(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def release_queue(queue) do
@@ -189,9 +275,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Increment the reference count on a command queue.
+  Decrements the `queue` reference count.
 
-  To decrement the reference count, see `Clex.CL.release_queue/1`.
+  To decrement the reference count, see `release_queue/1`.
   """
   @spec retain_queue(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def retain_queue(queue) do
@@ -199,15 +285,44 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Query a command queue for all properties
+  Query information about a command-queue.
+
+  ### Parameters
+
+  `queue` \
+  Specifies the command-queue being queried.
   """
   @spec get_queue_info(queue::cl_command_queue) :: {:ok, keyword()} | {:error, cl_error}
   def get_queue_info(queue) do
     :cl.get_queue_info(queue)
   end
 
+  ############################################################
+  # Memory Object
+  ############################################################
+
   @doc ~S"""
-  Create a memory buffer in the given context, of the requested size, configured by the given flags.
+  Creates a buffer object of `size` bytes.
+
+  ### Parameters
+
+  `context` \
+    A valid OpenCL context used to create the buffer object.
+
+  `flags` \
+    A list of flags used to specify allocation and usage information such as the memory arena that should be used to allocate the buffer object and how it will be used. The following table describes the possible values for flags. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                              | Description
+  :-------------------------------- | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  `size` \
+    The size in bytes of the buffer memory object to be allocated.
   """
   @spec create_buffer(context::cl_context, flags::list(cl_mem_flag), size::non_neg_integer) :: {:ok, cl_mem} | {:error, cl_error}
   def create_buffer(context, flags, size) do
@@ -215,7 +330,30 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create a memory buffer in the given context, of the requested size, configured by the given flags, and initializes the buffer with the provided data.
+  Creates a buffer object of `size` bytes and initializes it with the provided `data`.
+
+  ### Parameters
+
+  `context` \
+    A valid OpenCL context used to create the buffer object.
+
+  `flags` \
+    A list of flags used to specify allocation and usage information such as the memory arena that should be used to allocate the buffer object and how it will be used. The following table describes the possible values for flags. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                              | Description
+  :-------------------------------- | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  `size` \
+  The size in bytes of the buffer memory object to be allocated.
+
+  `data` \
+  Buffer data that may already be allocated by the application, used to initialize the newly created buffer based on `flags` settings.
   """
   @spec create_buffer(context::cl_context, flags::list(cl_mem_flag), size::non_neg_integer, data::iolist) :: {:ok, cl_mem} | {:error, cl_error}
   def create_buffer(context, flags, size, data) do
@@ -223,7 +361,33 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create a memory buffer from a region in an existing memory buffer for the given flags, origin, and size.
+  Creates a new buffer object (referred to as a sub-buffer object) from an existing buffer object.
+
+  ### Parameters
+
+  `buffer` \
+    A valid object and cannot be a sub-buffer object.
+
+  `flags` \
+    A list of flags used to specify allocation and usage information such as the memory arena that should be used to allocate the buffer object and how it will be used. The following table describes the possible values for flags. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                              | Description
+  :-------------------------------- | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  `type` \
+  Currently must be `:region`.
+
+  `origin` \
+  Offset into `buffer` to create the sub-buffer from.
+
+  `size` \
+  The size in bytes of the sub-buffer memory object to be allocated.
   """
   @spec create_sub_buffer(buffer::cl_mem, flags::list(cl_mem_flag), type::cl_buffer_create_type, origin::non_neg_integer, size::non_neg_integer) :: {:ok, cl_mem} | {:error, cl_error}
   def create_sub_buffer(buffer, flags, type, origin, size) do
@@ -231,10 +395,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Decrement the reference count on a memory buffer.
+  Decrements the memory object reference count.
 
-  Once the reference count goes to zero and all attached resources are released, the memory buffer is deleted.
-  To increment the reference count, see `Clex.CL.retain_mem_object/1`.
+  To increment the reference count, see `retain_mem_object/1`.
   """
   @spec release_mem_object(buffer::cl_mem) :: :ok | {:error, cl_error}
   def release_mem_object(buffer) do
@@ -242,9 +405,9 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Increment the reference count on a memory buffer.
+  Increments the memory object reference count.
 
-  To decrement the reference count, see `Clex.CL.release_mem_object/1`.
+  To decrement the reference count, see `release_mem_object/1`.
   """
   @spec retain_mem_object(buffer::cl_mem) :: :ok | {:error, cl_error}
   def retain_mem_object(buffer) do
@@ -252,7 +415,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Query a memory buffer for all properties
+  Get information that is common to all memory objects (buffer and image objects).
+
+  ### Parameters
+
+  `buffer` \
+  Specifies the memory object being queried.
   """
   @spec get_mem_object_info(buffer::cl_mem) :: {:ok, keyword()} | {:error, cl_error}
   def get_mem_object_info(buffer) do
@@ -261,6 +429,21 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Creates a 2D image object.
+
+  The `flags` are used to specify allocation and usage information such as the memory arena that should be used to allocate the buffer object and how it will be used. The following table describes the possible values for flags. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                                  | Description
+  :------------------------------------ | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  See `Clex.CL.ImageFormat` for image format details.
+
+  See `get_supported_image_formats/3` to discover what formats are supported by your OpenCL device.
   """
   @spec create_image2d(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, width::non_neg_integer, height::non_neg_integer, row_pitch::non_neg_integer, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
   def create_image2d(context, flags, image_format, width, height, row_pitch, data) do
@@ -269,6 +452,21 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Creates a 3D image object.
+
+  The `flags` are used to specify allocation and usage information such as the memory arena that should be used to allocate the buffer object and how it will be used. The following table describes the possible values for flags. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                                  | Description
+  :------------------------------------ | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  See `Clex.CL.ImageFormat` for image format details.
+
+  See `get_supported_image_formats/3` to discover what formats are supported by your OpenCL device.
   """
   @spec create_image3d(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, width::non_neg_integer, height::non_neg_integer, depth::non_neg_integer, row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
   def create_image3d(context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data) do
@@ -277,6 +475,26 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Get the list of image formats supported by an OpenCL implementation.
+
+  ### Parameters
+
+  `context` \
+    A valid OpenCL context on which the image object(s) will be created.
+
+  `flags` \
+    A list of flags used to specify allocation and usage information about the image memory object being created and is described in the table below. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                              | Description
+  :-------------------------------- | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  `image_type` \
+  Describes the image type and must be either `:image1d`, `:image1d_buffer`, `:image2d`, `:image3d`, `:image1d_array` or `:image2d_array`.
   """
   @spec get_supported_image_formats(context::cl_context, flags::list(cl_mem_flag), image_type::cl_mem_object_type) :: {:ok, list(tuple)} | {:error, cl_error}
   def get_supported_image_formats(context, flags, image_type) do
@@ -284,7 +502,30 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to read from a 2D or 3D image object to host memory.
+  Enqueue commands to read from an image or image array object to host memory.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `image` \
+  Refers to a valid image or image array object.
+
+  `origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D, or 3D image, the (x, y) offset and the image index in the image array or the (x) offset and the image index in the 1D image array. If image is a 2D image object, origin[2] must be 0. If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. If image is a 1D image array object, origin[2] must be 0. If image is a 1D image array object, origin[1] describes the image index in the 1D image array. If image is a 2D image array object, origin[2] describes the image index in the 2D image array.
+
+  `region` \
+  Defines the (width, height, depth) in pixels of the 1D, 2D or 3D rectangle, the (width, height) in pixels of the 2D rectangle and the number of images of a 2D image array or the (width) in pixels of the 1D rectangle and the number of images of a 1D image array. If image is a 2D image object, region[2] must be 1. If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. If image is a 1D image array object, region[2] must be 1.
+
+  `row_pitch` \
+  The length of each row in bytes. This value must be greater than or equal to the element size in bytes * width. If row_pitch is set to 0, the appropriate row pitch is calculated based on the size of each element in bytes multiplied by width.
+
+  `slice_pitch` \
+  Size in bytes of the 2D slice of the 3D region of a 3D image or each image of a 1D or 2D image array being read. This must be 0 if image is a 1D or 2D image. This value must be greater than or equal to row_pitch * height. If slice_pitch is set to 0, the appropriate slice pitch is calculated based on the row_pitch * height.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_read_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist) do
@@ -292,7 +533,33 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to write from a 2D or 3D image object to host memory, with event to synchornize on.
+  Enqueues a command to write to an image or image array object from host memory.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `image` \
+  Refers to a valid image or image array object.
+
+  `origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D, or 3D image, the (x, y) offset and the image index in the image array or the (x) offset and the image index in the 1D image array. If image is a 2D image object, origin[2] must be 0. If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. If image is a 1D image array object, origin[2] must be 0. If image is a 1D image array object, origin[1] describes the image index in the 1D image array. If image is a 2D image array object, origin[2] describes the image index in the 2D image array.
+
+  `region` \
+  Defines the (width, height, depth) in pixels of the 1D, 2D or 3D rectangle, the (width, height) in pixels of the 2D rectangle and the number of images of a 2D image array or the (width) in pixels of the 1D rectangle and the number of images of a 1D image array. If image is a 2D image object, region[2] must be 1. If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. If image is a 1D image array object, region[2] must be 1.
+
+  `row_pitch` \
+  The length of each row in bytes. This value must be greater than or equal to the element size in bytes * width. If row_pitch is set to 0, the appropriate row pitch is calculated based on the size of each element in bytes multiplied by width.
+
+  `slice_pitch` \
+  Size in bytes of the 2D slice of the 3D region of a 3D image or each image of a 1D or 2D image array being read. This must be 0 if image is a 1D or 2D image. This value must be greater than or equal to row_pitch * height. If slice_pitch is set to 0, the appropriate slice pitch is calculated based on the row_pitch * height.
+
+  `data` \
+  The data buffer in host memory where image data is read from.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_write_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist) do
@@ -301,6 +568,37 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to copy image objects.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `src_image`, `dest_image` \
+  Can be 1D, 2D, 3D image or a 1D, 2D image array objects allowing us to perform the following actions:
+
+  * Copy a 1D image object to a 1D image object.
+  * Copy a 1D image object to a scanline of a 2D image object and vice-versa.
+  * Copy a 1D image object to a scanline of a 2D slice of a 3D image object and vice-versa.
+  * Copy a 1D image object to a scanline of a specific image index of a 1D or 2D image array object and vice-versa.
+  * Copy a 2D image object to a 2D image object.
+  * Copy a 2D image object to a 2D slice of a 3D image object and vice-versa.
+  * Copy a 2D image object to a specific image index of a 2D image array object and vice versa.
+  * Copy images from a 1D image array object to a 1D image array object.
+  * Copy images from a 2D image array object to a 2D image array object.
+  * Copy a 3D image object to a 3D image object.
+
+  `src_origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D or 3D image, the (x, y) offset and the image index in the 2D image array or the (x) offset and the image index in the 1D image array. If image is a 2D image object, src_origin[2] must be 0. If src_image is a 1D image object, src_origin[1] and src_origin[2] must be 0. If src_image is a 1D image array object, src_origin[2] must be 0. If src_image is a 1D image array object, src_origin[1] describes the image index in the 1D image array. If src_image is a 2D image array object, src_origin[2] describes the image index in the 2D image array
+
+  `dest_origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D or 3D image, the (x, y) offset and the image index in the 2D image array or the (x) offset and the image index in the 1D image array. If dst_image is a 2D image object, dst_origin[2] must be 0. If dst_image is a 1D image or 1D image buffer object, dst_origin[1] and dst_origin[2] must be 0. If dst_image is a 1D image array object, dst_origin[2] must be 0. If dst_image is a 1D image array object, dst_origin[1] describes the image index in the 1D image array. If dst_image is a 2D image array object, dst_origin[2] describes the image index in the 2D image array
+
+  `region` \
+  Defines the (width, height, depth) in pixels of the 1D, 2D or 3D rectangle, the (width, height) in pixels of the 2D rectangle and the number of images of a 2D image array or the (width) in pixels of the 1D rectangle and the number of images of a 1D image array. If image is a 2D image object, region[2] must be 1. If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. If image is a 1D image array object, region[2] must be 1.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_copy_image(queue::cl_command_queue, src_image::cl_mem, dest_image::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist) do
@@ -309,6 +607,29 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to copy an image object to a buffer object.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `src_image` \
+  A valid image object.
+
+  `dest_buffer` \
+  A valid buffer object.
+
+  `src_origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D or 3D image, the (x, y) offset and the image index in the 2D image array or the (x) offset and the image index in the 1D image array. If src_image is a 2D image object, src_origin[2] must be 0. If src_image is a 1D image or 1D image buffer object, src_origin[1] and src_origin[2] must be 0. If src_image is a 1D image array object, src_origin[2] must be 0. If src_image is a 1D image array object, src_origin[1] describes the image index in the 1D image array. If src_image is a 2D image array object, src_origin[2] describes the image index in the 2D image array.
+
+  `region` \
+  Defines the (width, height, depth) in pixels of the 1D, 2D or 3D rectangle, the (width, height) in pixels of the 2D rectangle and the number of images of a 2D image array or the (width) in pixels of the 1D rectangle and the number of images of a 1D image array. If src_image is a 2D image object, region[2] must be 1. If src_image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. If src_image is a 1D image array object, region[2] must be 1.
+
+  `dest_offset` \
+  Refers to the offset where to begin copying data into dst_buffer. The size in bytes of the region to be copied referred to as dst_cb is computed as width * height * depth * bytes/image element if src_image is a 3D image object, is computed as width * height * bytes/image element if src_image is a 2D image, is computed as width * height * arraysize * bytes/image element if src_image is a 2D image array object, is computed as width * bytes/image element if src_image is a 1D image or 1D image buffer object and is computed as width * arraysize * bytes/image element if src_image is a 1D image array object.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_copy_image_to_buffer(queue::cl_command_queue, src_image::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), region::list(non_neg_integer), dest_offset::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist) do
@@ -316,15 +637,63 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to copy a buffer object to another buffer object.
+  Enqueues a command to copy from one buffer object to another.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `src_buffer` \
+  A valid buffer object.
+
+  `dest_buffer` \
+  A valid buffer object.
+
+  `src_offset` \
+  The offset where to begin copying data from `src_buffer`.
+
+  `dest_offset` \
+  The offset where to begin copying data into `dest_buffer`.
+
+  `size` \
+  Refers to the size in bytes to copy.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
-  @spec enqueue_copy_buffer(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_offset::non_neg_integer, dest_offset::non_neg_integer, cb::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist) do
-    :cl.enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist)
+  @spec enqueue_copy_buffer(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_offset::non_neg_integer, dest_offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist) do
+    :cl.enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist)
   end
 
   @doc ~S"""
   Enqueues a command to copy a buffer object to an image object.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `src_buffer` \
+  A valid buffer object.
+
+  `dest_image` \
+  A valid image object.
+
+  `src_offset` \
+  The offset where to begin copying data from `src_buffer`.
+
+  `dest_origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D or 3D image, the (x, y) offset and the image index in the 2D image array or the (x) offset and the image index in the 1D image array. If dst_image is a 2D image object, dst_origin[2] must be 0. If dst_image is a 1D image or 1D image buffer object, dst_origin[1] and dst_origin[2] must be 0. If dst_image is a 1D image array object, dst_origin[2] must be 0. If dst_image is a 1D image array object, dst_origin[1] describes the image index in the 1D image array. If dst_image is a 2D image array object, dst_origin[2] describes the image index in the 2D image array.
+
+  `region` \
+    Defines the (width, height, depth) in pixels of the 1D, 2D or 3D rectangle, the (width, height) in pixels of the 2D rectangle and the number of images of a 2D image array or the (width) in pixels of the 1D rectangle and the number of images of a 1D image array. If dst_image is a 2D image object, region[2] must be 1. If dst_image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. If dst_image is a 1D image array object, region[2] must be 1.
+
+    The size in bytes of the region to be copied from src_buffer referred to as src_cb is computed as width * height * depth * bytes/image_element if dst_image is a 3D image object, is computed as width * height * bytes/image_element if dst_image is a 2D image, is computed as width * height * arraysize * bytes/image_element if dst_image is a 2D image array object, is computed as width * bytes/image_element if dst_image is a 1D image or 1D image buffer object and is computed as width * arraysize * bytes/image_element if dst_image is a 1D image array object.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_copy_buffer_to_image(queue::cl_command_queue, src_buffer::cl_mem, dest_image::cl_mem, src_offset::non_neg_integer, dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist) do
@@ -332,7 +701,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Retrieves information pertaining to this image object.
+  Get information specific to an image object.
+
+  ### Parameters
+
+  `image` \
+  Specifies the image being queried.
   """
   @spec get_image_info(image::cl_mem) :: {:ok, keyword()} | {:error, cl_error}
   def get_image_info(image) do
@@ -341,6 +715,38 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueue commands to read from a rectangular region from a buffer object to host memory.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `buffer` \
+  Refers to a valid buffer object.
+
+  `buffer_origin` \
+  The (x, y, z) offset in the memory region associated with buffer. For a 2D rectangle region, the z value given by buffer_origin[2] should be 0. The offset in bytes is computed as buffer_origin[2] * buffer_slice_pitch + buffer_origin[1] * buffer_row_pitch + buffer_origin[0].
+
+  `host_origin` \
+  The (x, y, z) offset in the memory region pointed to by ptr. For a 2D rectangle region, the z value given by host_origin[2] should be 0. The offset in bytes is computed as host_origin[2] * host_slice_pitch + host_origin[1] * host_row_pitch + host_origin[0].
+
+  `region` \
+  The (width, height, depth) in bytes of the 2D or 3D rectangle being read or written. For a 2D rectangle copy, the depth value given by region[2] should be 1.
+
+  `buffer_row_pitch` \
+  The length of each row in bytes to be used for the memory region associated with buffer. If buffer_row_pitch is 0, buffer_row_pitch is computed as region[0].
+
+  `buffer_slice_pitch` \
+  The length of each 2D slice in bytes to be used for the memory region associated with buffer. If buffer_slice_pitch is 0, buffer_slice_pitch is computed as region[1] * buffer_row_pitch.
+
+  `host_row_pitch` \
+  The length of each row in bytes to be used for the memory region pointed to by ptr. If host_row_pitch is 0, host_row_pitch is computed as region[0].
+
+  `host_slice_pitch` \
+  The length of each 2D slice in bytes to be used for the memory region pointed to by ptr. If host_slice_pitch is 0, host_slice_pitch is computed as region[1] * host_row_pitch.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_read_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist) do
@@ -348,7 +754,42 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueue commands to write a rectangular region to a buffer object from host memory.
+  Enqueue commands to write a 2D or 3D rectangular region to a buffer object from host memory.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `buffer` \
+  Refers to a valid buffer object.
+
+  `buffer_origin` \
+  The (x, y, z) offset in the memory region associated with buffer. For a 2D rectangle region, the z value given by buffer_origin[2] should be 0. The offset in bytes is computed as buffer_origin[2] * buffer_slice_pitch + buffer_origin[1] * buffer_row_pitch + buffer_origin[0].
+
+  `host_origin` \
+  The (x, y, z) offset in the memory region pointed to by ptr. For a 2D rectangle region, the z value given by host_origin[2] should be 0. The offset in bytes is computed as host_origin[2] * host_slice_pitch + host_origin[1] * host_row_pitch + host_origin[0].
+
+  `region` \
+  The (width, height, depth) in bytes of the 2D or 3D rectangle being read or written. For a 2D rectangle copy, the depth value given by region[2] should be 1.
+
+  `buffer_row_pitch` \
+  The length of each row in bytes to be used for the memory region associated with buffer. If buffer_row_pitch is 0, buffer_row_pitch is computed as region[0].
+
+  `buffer_slice_pitch` \
+  The length of each 2D slice in bytes to be used for the memory region associated with buffer. If buffer_slice_pitch is 0, buffer_slice_pitch is computed as region[1] * buffer_row_pitch.
+
+  `host_row_pitch` \
+  The length of each row in bytes to be used for the memory region pointed to by ptr. If host_row_pitch is 0, host_row_pitch is computed as region[0].
+
+  `host_slice_pitch` \
+  The length of each 2D slice in bytes to be used for the memory region pointed to by ptr. If host_slice_pitch is 0, host_slice_pitch is computed as region[1] * host_row_pitch.
+
+  `data` \
+  A valid buffer in host memory where data is to be read into.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_write_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist) do
@@ -356,7 +797,42 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a command to copy a rectangular region from the buffer object to another buffer object.
+  Enqueues a command to copy a rectangular region from a buffer object to another buffer object.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `src_buffer` \
+  A valid buffer object.
+
+  `dest_buffer` \
+  A valid buffer object.
+
+  `src_origin` \
+  The (x, y, z) offset in the memory region associated with src_buffer. For a 2D rectangle region, the z value given by src_origin[2] should be 0. The offset in bytes is computed as src_origin[2] * src_slice_pitch + src_origin[1] * src_row_pitch + src_origin[0].
+
+  `dest_origin` \
+  The (x, y, z) offset in the memory region associated with dst_buffer. For a 2D rectangle region, the z value given by dst_origin[2] should be 0. The offset in bytes is computed as dst_origin[2] * dst_slice_pitch + dst_origin[1] * dst_row_pitch + dst_origin[0].
+
+  `region` \
+  The (width, height, depth) in bytes of the 2D or 3D rectangle being copied. For a 2D rectangle, the depth value given by region[2] should be 1.
+
+  `src_row_pitch` \
+  The length of each row in bytes to be used for the memory region associated with src_buffer. If src_row_pitch is 0, src_row_pitch is computed as region[0].
+
+  `src_slice_pitch` \
+  The length of each 2D slice in bytes to be used for the memory region associated with src_buffer. If src_slice_pitch is 0, src_slice_pitch is computed as region[1] * src_row_pitch.
+
+  `dest_row_pitch` \
+  The length of each row in bytes to be used for the memory region associated with dst_buffer. If dst_row_pitch is 0, dst_row_pitch is computed as region[0].
+
+  `dest_slice_pitch` \
+  The length of each 2D slice in bytes to be used for the memory region associated with dst_buffer. If dst_slice_pitch is 0, dst_slice_pitch is computed as region[1] * dst_row_pitch.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_copy_buffer_rect(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), src_row_pitch::non_neg_integer, src_slice_pitch::non_neg_integer, dest_row_pitch::non_neg_integer, dest_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist) do
@@ -366,6 +842,26 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to fill a buffer object with a pattern of a given pattern size.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `buffer` \
+  A valid buffer object.
+
+  `pattern` \
+  A pointer to the data pattern of size pattern_size in bytes. pattern will be used to fill a region in buffer starting at offset and is size bytes in size. The data pattern must be a scalar or vector integer or floating-point data type. For example, if buffer is to be filled with a pattern of float4 values, then pattern will be a pointer to a cl_float4 value and pattern_size will be sizeof(cl_float4). The maximum value of pattern_size is the size of the largest integer or floating-point vector data type supported by the OpenCL device. The memory associated with pattern can be reused or freed after the function returns.
+
+  `offset` \
+  The location in bytes of the region being filled in buffer and must be a multiple of `pattern` size in bytes.
+
+  `size` \
+  The size in bytes of region being filled in buffer and must be a multiple of `pattern` size in bytes.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_fill_buffer(queue::cl_command_queue, buffer::cl_mem, pattern::binary, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist) do
@@ -374,6 +870,23 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Creates a 1D image, 1D image buffer, 1D image array, 2D image, 2D image array or 3D image object.
+
+  The `flags` are used to specify allocation and usage information such as the memory arena that should be used to allocate the buffer object and how it will be used. The following table describes the possible values for flags. If `flags` is an empty list, the default is used which is `:read_write`.
+
+  Flag                                  | Description
+  :------------------------------------ | :---------
+  `:read_write`                     | This flag specifies that the memory object will be read and written by a kernel. This is the default.
+  `:write_only`                     | This flags specifies that the memory object will be written but not read by a kernel. Reading from a buffer or image object created with `:write_only` inside a kernel is undefined. `:read_write` and `:write_only` are mutually exclusive.
+  `:read_only`                      | This flag specifies that the memory object is a read-only memory object when used inside a kernel. Writing to a buffer or image object created with `:read_only` inside a kernel is undefined. `:read_write` or `:write_only` and `:read_only` are mutually exclusive.
+  `:use_host_ptr`                   | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to use memory referenced by host_ptr as the storage bits for the memory object. OpenCL implementations are allowed to cache the buffer contents pointed to by host_ptr in device memory. This cached copy can be used when kernels are executed on a device. The result of OpenCL commands that operate on multiple buffer objects created with the same host_ptr or overlapping host regions is considered to be undefined. Refer to the description of the alignment rules for host_ptr for memory objects (buffer and images) created using `:use_host_ptr`.
+  `:alloc_host_ptr`                 | This flag specifies that the application wants the OpenCL implementation to allocate memory from host accessible memory. `:alloc_host_ptr` and `:use_host_ptr` are mutually exclusive.
+  `:copy_host_ptr`                  | This flag is valid only if host_ptr is not NULL. If specified, it indicates that the application wants the OpenCL implementation to allocate memory for the memory object and copy the data from memory referenced by host_ptr. `:copy_host_ptr` and `:use_host_ptr` are mutually exclusive. `:copy_host_ptr` can be used with `:alloc_host_ptr` to initialize the contents of the cl_mem object allocated using host-accessible (e.g. PCIe) memory.
+
+  See `Clex.CL.ImageFormat` for image format details.
+
+  See `Clex.CL.ImageDesc` for image description details.
+
+  See `get_supported_image_formats/3` to discover what formats are supported by your OpenCL device.
   """
   @spec create_image(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, image_desc::cl_image_desc, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
   def create_image(context, flags, image_format, image_desc, data) do
@@ -382,6 +895,26 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to fill an image object with a specified color.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `image` \
+  A valid image object.
+
+  `fill_color` \
+  The fill color. The fill color is a four component RGBA floating-point color value if the image channel data type is not an unnormalized signed and unsigned integer type, is a four component signed integer value if the image channel data type is an unnormalized signed integer type and is a four component unsigned integer value if the image channel data type is an unormalized unsigned integer type. The fill color will be converted to the appropriate image channel format and order associated with image.
+
+  `origin` \
+  Defines the (x, y, z) offset in pixels in the 1D, 2D, or 3D image, the (x, y) offset and the image index in the image array or the (x) offset and the image index in the 1D image array. If image is a 2D image object, origin[2] must be 0. If image is a 1D image or 1D image buffer object, origin[1] and origin[2] must be 0. If image is a 1D image array object, origin[2] must be 0. If image is a 1D image array object, origin[1] describes the image index in the 1D image array. If image is a 2D image array object, origin[2] describes the image index in the 2D image array.
+
+  `region` \
+  Defines the (width, height, depth) in pixels of the 1D, 2D or 3D rectangle, the (width, height) in pixels of the 2D rectangle and the number of images of a 2D image array or the (width) in pixels of the 1D rectangle and the number of images of a 1D image array. If image is a 2D image object, region[2] must be 1. If image is a 1D image or 1D image buffer object, region[1] and region[2] must be 1. If image is a 1D image array object, region[2] must be 1.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_fill_image(queue::cl_command_queue, image::cl_mem, fill_color::binary, origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_fill_image(queue, image, fill_color, origin, region, waitlist) do
@@ -390,11 +923,87 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to indicate which device a set of memory objects should be associated with.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `mem_objects` \
+  A list of memory objects.
+
+  `flags` \
+  A list of flags used to specify migration options.  The table below describes the possible values for flags.
+
+    Flag                | Description
+  :-------------------- | :---------
+  `:host`               | This flag indicates that the specified set of memory objects are to be migrated to the host, regardless of the target command-queue.
+  `:content_undefined`  | This flag indicates that the contents of the set of memory objects are undefined after migration. The specified set of memory objects are migrated to the device associated with command_queue without incurring the overhead of migrating their contents.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_migrate_mem_objects(queue::cl_command_queue, mem_objects::list(cl_mem), flags::list(cl_mem_migration_flags), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist) do
     :cl.enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist)
   end
+
+  @doc ~S"""
+  Enqueue commands to read from a buffer object to host memory.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `buffer` \
+  Refers to a valid buffer object.
+
+  `offset` \
+  The offset in bytes in the buffer object to read from.
+
+  `size` \
+  The size in bytes of data being read.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
+  """
+  @spec enqueue_read_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_read_buffer(queue, buffer, offset, size, waitlist) do
+    :cl.enqueue_read_buffer(queue, buffer, offset, size, waitlist)
+  end
+
+  @doc ~S"""
+  Enqueue commands to write to a buffer object from host memory.
+
+  ### Parameters
+
+  `queue` \
+  Refers to the command-queue in which the read command will be queued. `queue` and `image` must be created with the same OpenCL context.
+
+  `buffer` \
+  Refers to a valid buffer object.
+
+  `offset` \
+  The offset in bytes in the buffer object to write to.
+
+  `size` \
+  The size in bytes of data being written.
+
+  `data` \
+  The buffer in host memory where data is to be written from.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
+  """
+  @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
+    :cl.enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
+  end
+
+  ############################################################
+  # Sampler Objects
+  ############################################################
 
   @doc ~S"""
   Creates a sampler object.
@@ -407,7 +1016,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Increment the reference count on a sampler.
 
-  To decrement the reference count, see `Clex.CL.release_sampler/1`.
+  To decrement the reference count, see `release_sampler/1`.
   """
   @spec retain_sampler(sampler::cl_sampler) :: :ok | {:error, cl_error}
   def retain_sampler(sampler) do
@@ -418,7 +1027,7 @@ defmodule Clex.CL do
   Decrement the reference count on a sampler.
 
   Once the reference count goes to zero and all attached resources are released, the sampler is deleted.
-  To increment the reference count, see `Clex.CL.retain_sampler/1`.
+  To increment the reference count, see `retain_sampler/1`.
   """
   @spec release_sampler(sampler::cl_sampler) :: :ok | {:error, cl_error}
   def release_sampler(sampler) do
@@ -432,6 +1041,10 @@ defmodule Clex.CL do
   def get_sampler_info(sampler) do
     :cl.get_sampler_info(sampler)
   end
+
+  ############################################################
+  # Program Objects
+  ############################################################
 
   @doc ~S"""
   Create a program in the given context from the provided source.
@@ -461,7 +1074,7 @@ defmodule Clex.CL do
   Decrement the reference count on a program.
 
   Once the reference count goes to zero and all attached resources are released, the program is deleted.
-  To increment the reference count, see `Clex.CL.retain_program/1`.
+  To increment the reference count, see `retain_program/1`.
   """
   @spec release_program(program::cl_program) :: :ok | {:error, cl_error}
   def release_program(program) do
@@ -471,7 +1084,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Increment the reference count on a program.
 
-  To decrement the reference count, see `Clex.CL.release_program/1`.
+  To decrement the reference count, see `release_program/1`.
   """
   @spec retain_program(program::cl_program) :: :ok | {:error, cl_error}
   def retain_program(program) do
@@ -558,6 +1171,10 @@ defmodule Clex.CL do
     :cl.get_program_build_info(program, device)
   end
 
+  ############################################################
+  # Kernel Objects
+  ############################################################
+
   @doc ~S"""
   Create a kernel object for the named function found in the given program.
   """
@@ -586,7 +1203,7 @@ defmodule Clex.CL do
   Decrement the reference count on a kernel.
 
   Once the reference count goes to zero and all attached resources are released, the kernel is deleted.
-  To increment the reference count, see `Clex.CL.retain_kernel/1`.
+  To increment the reference count, see `retain_kernel/1`.
   """
   @spec release_kernel(kernel::cl_kernel) :: :ok | {:error, cl_error}
   def release_kernel(kernel) do
@@ -596,7 +1213,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Increment the reference count on a kernel.
 
-  To decrement the reference count, see `Clex.CL.release_kernel/1`.
+  To decrement the reference count, see `release_kernel/1`.
   """
   @spec retain_kernel(kernel::cl_kernel) :: :ok | {:error, cl_error}
   def retain_kernel(kernel) do
@@ -627,6 +1244,10 @@ defmodule Clex.CL do
     :cl.get_kernel_arg_info(kernel)
   end
 
+  ############################################################
+  # Executing Kernels
+  ############################################################
+
   @doc ~S"""
   Enqueues a command to execute a kernel on a device.
   """
@@ -643,53 +1264,15 @@ defmodule Clex.CL do
     :cl.enqueue_nd_range_kernel(queue, kernel, global, local, waitlist)
   end
 
-  @doc ~S"""
-  Enqueues a marker command to command_queue. The marker command returns an event which can be used to queue a wait on
-  this marker event i.e. wait for all commands queued before the marker command to complete.
-  """
-  @spec enqueue_marker(queue::cl_command_queue) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_marker(queue) do
-    :cl.enqueue_marker(queue)
-  end
-
-  @doc ~S"""
-  Enqueues a synchonrization point that ensures all prior commands in the given queue have completed.
-  """
-  @spec enqueue_barrier(queue::cl_command_queue) :: :ok | {:error, cl_error}
-  def enqueue_barrier(queue) do
-    :cl.enqueue_barrier(queue)
-  end
-
-  @doc ~S"""
-  Enqueues a wait for a specific event or a list of events to complete before any future commands queued in the
-  queue are executed.
-  """
-  @spec enqueue_wait_for_events(queue::cl_command_queue, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
-  def enqueue_wait_for_events(queue, waitlist) do
-    :cl.enqueue_wait_for_events(queue, waitlist)
-  end
-
-  @doc ~S"""
-  Enqueue commands to read from a buffer object to host memory, with a returned event to track the command completion.
-  """
-  @spec enqueue_read_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_read_buffer(queue, buffer, offset, size, waitlist) do
-    :cl.enqueue_read_buffer(queue, buffer, offset, size, waitlist)
-  end
-
-  @doc ~S"""
-  Enqueue commands to write to a buffer object from host memory, with a returned event to track the command completion.
-  """
-  @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
-    :cl.enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
-  end
+  ############################################################
+  # Event Objects
+  ############################################################
 
   @doc ~S"""
   Decrement the reference count on an event.
 
   Once the reference count goes to zero and all attached resources are released, the event is deleted.
-  To increment the reference count, see `Clex.CL.retain_event/1`.
+  To increment the reference count, see `retain_event/1`.
   """
   @spec release_event(event::cl_event) :: :ok | {:error, cl_error}
   def release_event(event) do
@@ -699,7 +1282,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Increment the reference count on an event.
 
-  To decrement the reference count, see `Clex.CL.release_event/1`.
+  To decrement the reference count, see `release_event/1`.
   """
   @spec retain_event(event::cl_event) :: :ok | {:error, cl_error}
   def retain_event(event) do
@@ -751,6 +1334,36 @@ defmodule Clex.CL do
     :cl.wait_for_events(waitlist)
   end
 
+  ############################################################
+  # Execution of Kernels and Memory Object Commands
+  ############################################################
+
+  @doc ~S"""
+  Enqueues a marker command to command_queue. The marker command returns an event which can be used to queue a wait on
+  this marker event i.e. wait for all commands queued before the marker command to complete.
+  """
+  @spec enqueue_marker(queue::cl_command_queue) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_marker(queue) do
+    :cl.enqueue_marker(queue)
+  end
+
+  @doc ~S"""
+  Enqueues a synchonrization point that ensures all prior commands in the given queue have completed.
+  """
+  @spec enqueue_barrier(queue::cl_command_queue) :: :ok | {:error, cl_error}
+  def enqueue_barrier(queue) do
+    :cl.enqueue_barrier(queue)
+  end
+
+  @doc ~S"""
+  Enqueues a wait for a specific event or a list of events to complete before any future commands queued in the
+  queue are executed.
+  """
+  @spec enqueue_wait_for_events(queue::cl_command_queue, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
+  def enqueue_wait_for_events(queue, waitlist) do
+    :cl.enqueue_wait_for_events(queue, waitlist)
+  end
+
   @doc ~S"""
   Enqueues a marker command which waits for either a list of events to complete, or all previously enqueued commands to complete.
   """
@@ -767,11 +1380,15 @@ defmodule Clex.CL do
     :cl.enqueue_barrier_with_wait_list(queue, waitlist)
   end
 
+  ############################################################
+  # Flush and Finish
+  ############################################################
+
   @doc ~S"""
   Blocking request issues all previously queued OpenCL commands in a command queue to the device associated with the
   command queue.
 
-  `Clex.CL.flush/1` only guarantees that all queued commands to command queue get
+  `flush/1` only guarantees that all queued commands to command queue get
   issued to the appropriate device. There is no guarantee that they
   will be complete after the call returns.
   """
@@ -784,7 +1401,7 @@ defmodule Clex.CL do
   Asynchronously issues all previously queued OpenCL commands in a command queue to the device associated with the
   command queue.
 
-  `Clex.CL.async_flush/1` only guarantees that all queued commands to command queue get
+  `async_flush/1` only guarantees that all queued commands to command queue get
   issued to the appropriate device. There is no guarantee that they
   will be complete after the call returns.
   """
@@ -798,7 +1415,7 @@ defmodule Clex.CL do
   in a command-queue are issued to the associated device and have
   completed.
 
-  `Clex.CL.finish/1` does not return until all queued commands in command_queue
+  `finish/1` does not return until all queued commands in command_queue
   have been processed and completed. This function is also a
   synchronization point.
   """
@@ -812,7 +1429,7 @@ defmodule Clex.CL do
   in a command-queue are issued to the associated device and have
   completed.
 
-  `Clex.CL.async_finish/1` does not block until all queued commands in command_queue
+  `async_finish/1` does not block until all queued commands in command_queue
   have been processed and completed, and there is no guarantee that all commands have been completed at return time.
   """
   @spec async_finish(queue::cl_command_queue) :: :ok | {:error, cl_error}

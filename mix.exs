@@ -18,7 +18,7 @@ defmodule Clex.MixProject do
       source_url: "https://github.com/arpieb/clex",
       homepage_url: "https://github.com/arpieb/clex",
       docs: [
-        logo: "assets/clex-logo.png",
+        logo: "pages/assets/clex-logo.png",
         main: "readme",
         extras: [
           "README.md",
