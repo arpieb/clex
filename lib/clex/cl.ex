@@ -1053,7 +1053,7 @@ defmodule Clex.CL do
 
   ### Parameters
 
-  `image` \
+  `sampler` \
   Specifies the sampler being queried.
   """
   @spec get_sampler_info(sampler::cl_sampler) :: {:ok, keyword()} | {:error, cl_error}
@@ -1066,7 +1066,15 @@ defmodule Clex.CL do
   ############################################################
 
   @doc ~S"""
-  Create a program in the given context from the provided source.
+  Creates a program object for a context, and loads the source code provided into the program object.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context.
+
+  `source` \
+  The textual source code to be loaded into the program pbject.  The devices associated with the program object are the devices associated with context. The source code provided is either an OpenCL C program source, header or implementation-defined source for custom devices that support an online compiler.
   """
   @spec create_program_with_source(context::cl_context, source::iodata) :: {:ok, cl_program} | {:error, cl_error}
   def create_program_with_source(context, source) do
@@ -1074,19 +1082,45 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create a program in the given context + devices from the provided list of one or more precompiled binaries.
+  Creates a program object for a context, and loads the binary bits specified by binary into the program object.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context.
+
+  `device_binaries` \
+  A list of tuples of the form `{device, binary}` where `device` belongs to `context` and `binary` is one of:
+
+  - A program executable to be run on the device(s) associated with `context`.
+  - A compiled program for device(s) associated with `context`.
+  - A library of compiled programs for device(s) associated with `context`.
   """
-  @spec create_program_with_binary(context::cl_context, devices::list(cl_device), binaries::list(binary)) :: {:ok, cl_program} | {:error, cl_error}
-  def create_program_with_binary(context, devices, binaries) do
+  @spec create_program_with_binary(context::cl_context, device_binaries::list({cl_device, binary})) :: {:ok, cl_program} | {:error, cl_error}
+  def create_program_with_binary(context, device_binaries) do
+    {devices, binaries} = Enum.unzip(device_binaries)
     :cl.create_program_with_binary(context, devices, binaries)
   end
 
   @doc ~S"""
-  Create a program in the given context + devices from the provided list of one or more builtin kernels.
+  Creates a program object for a context, and loads the information related to the built-in kernels into a program object.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context.
+
+  `devices` \
+  A list of devices that are in context. `devices` must not be an empty list. The built-in kernels are loaded for devices specified in this list.
+
+  The devices associated with the program object will be the list of devices specified by `devices`. The list of devices specified by `devices` must be devices associated with `context`.
+
+  `kernel_names` \
+  A list of built-in kernel names.
   """
-  @spec create_program_with_builtin_kernels(context::cl_context, devices::list(cl_device), kernel_names::binary) :: {:ok, cl_program} | {:error, cl_error}
+  @spec create_program_with_builtin_kernels(context::cl_context, devices::list(cl_device), kernel_names::list(binary)) :: {:ok, cl_program} | {:error, cl_error}
   def create_program_with_builtin_kernels(context, devices, kernel_names) do
-    :cl.create_program_with_builtin_kernels(context, devices, kernel_names)
+    :cl.create_program_with_builtin_kernels(context, devices, Enum.join(kernel_names, ";"))
   end
 
   @doc ~S"""
@@ -1111,7 +1145,22 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Build a program for the given devices using the options.
+  Builds (compiles and links) a program executable from the program source or binary.
+
+  ### Parameters
+
+  `program` \
+  The program object.
+
+  `devices` \
+  A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
+
+  `options` \
+  A string of characters that describes the build options to be used for building the program executable. The list of supported options can be found for your target version of OpenCL:
+
+  - [OpenCL 1.0 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.0/docs/man/xhtml/clBuildProgram.html)
+  - [OpenCL 1.1 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.1/docs/man/xhtml/clBuildProgram.html)
+  - [OpenCL 1.2 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html)
   """
   @spec build_program(program::cl_program, devices::list(cl_device), options::binary) :: :ok | {:error, cl_error}
   def build_program(program, devices, options) do
@@ -1119,7 +1168,15 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Build a program for the given devices using the options.
+  Builds (compiles and links) a program executable from the program source or binary using default build options.  If you need to control build options, please refer to `build_program/3`.
+
+  ### Parameters
+
+  `program` \
+  The program object.
+
+  `devices` \
+  A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
   """
   @spec build_program(program::cl_program, devices::list(cl_device)) :: :ok | {:error, cl_error}
   def build_program(program, devices) do
@@ -1135,7 +1192,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Allows the implementation to release the resources allocated by the OpenCL compiler for a specific platform.
+  Allows the implementation to release the resources allocated by the OpenCL compiler for platform.
+
+  ### Parameters
+
+  `platform` \
+  A valid platform reference returned by `get_platform_ids/0`.
   """
   @spec unload_platform_compiler(platform::cl_platform) :: :ok | {:error, cl_error}
   def unload_platform_compiler(platform) do
@@ -1143,23 +1205,75 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Compile a program for the given devices using the options.
+  Compiles a program’s source for all the devices or a specific device(s) in the OpenCL context associated with `program`.
+
+  ### Parameters
+
+  `program` \
+  The program object that is the compilation target.
+
+  `devices` \
+  A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
+
+  `options` \
+  A string of characters that describes the build options to be used for building the program executable. The list of supported options can be found for your target version of OpenCL:
+
+  - [OpenCL 1.2 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clCompileProgram.html)
+
+  `named_headers` \
+  A list of tuples of the form `{name, header}` where `name` specifies the include name used by source in `program` that comes from an embedded header and `header` is the program object which contains the header source to be used.  If multiple entries in `named_headers` refer to the same header name, the first one encountered will be used.
   """
-  @spec compile_program(program::cl_program, devices::list(cl_device), options::binary, headers::list(cl_program), names::list(binary)) :: :ok | {:error, cl_error}
-  def compile_program(program, devices, options, headers, names) do
+  @spec compile_program(program::cl_program, devices::list(cl_device), options::binary, named_headers::list({binary, cl_program})) :: :ok | {:error, cl_error}
+  def compile_program(program, devices, options, named_headers) do
+    {names, headers} = Enum.unzip(named_headers)
     :cl.compile_program(program, devices, options, headers, names)
   end
 
   @doc ~S"""
-  Asynchronously compile a program for the given devices using the options.
+  Asynchronously compiles a program’s source for all the devices or a specific device(s) in the OpenCL context associated with `program`.
+
+  ### Parameters
+
+  `program` \
+  The program object that is the compilation target.
+
+  `devices` \
+  A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
+
+  `options` \
+  A string of characters that describes the build options to be used for building the program executable. The list of supported options can be found for your target version of OpenCL:
+
+  - [OpenCL 1.2 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clCompileProgram.html)
+
+  `named_headers` \
+  A list of tuples of the form `{name, header}` where `name` specifies the include name used by source in `program` that comes from an embedded header and `header` is the program object which contains the header source to be used.  If multiple entries in `named_headers` refer to the same header name, the first one encountered will be used.
   """
-  @spec async_compile_program(program::cl_program, devices::list(cl_device), options::binary, headers::list(cl_program), names::list(binary)) :: :ok | {:error, cl_error}
-  def async_compile_program(program, devices, options, headers, names) do
+  @spec async_compile_program(program::cl_program, devices::list(cl_device), options::binary, named_headers::list({binary, cl_program})) :: :ok | {:error, cl_error}
+  def async_compile_program(program, devices, options, named_headers) do
+    {names, headers} = Enum.unzip(named_headers)
     :cl.async_compile_program(program, devices, options, headers, names)
   end
 
   @doc ~S"""
-  Links a collection of programs for the given devices and context.
+  Links a set of compiled program objects and libraries for all the devices or a specific device(s) in the OpenCL context and creates an executable.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context.
+
+  `devices` \
+  A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
+
+  `options` \
+  A string of characters that describes the link options to be used for building the program executable. See `build_program/3` for a list of supported compiler and linker options.
+
+  `programs` \
+   A list of program objects that are compiled binaries or libraries that are to be linked to create the program executable. For each device in `devices` or if `devices` is empty the list of devices associated with `context`, the following cases occur:
+
+  - All programs specified by `programs` contain a compiled binary or library for the device. In this case, a link is performed to generate a program executable for this device.
+  - None of the programs contain a compiled binary or library for that device. In this case, no link is performed and there will be no program executable generated for this device.
+  - All other cases will return a `:invalid_operation` error.
   """
   @spec link_program(context::cl_context, devices::list(cl_device), options::binary, programs::list(cl_program)) :: {:ok, cl_program} | {:error, cl_error}
   def link_program(context, devices, options, programs) do
@@ -1167,7 +1281,25 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Asynchronously links a collection of programs for the given devices and context.
+  Asynchronously links a set of compiled program objects and libraries for all the devices or a specific device(s) in the OpenCL context and creates an executable.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context.
+
+  `devices` \
+  A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
+
+  `options` \
+  A string of characters that describes the link options to be used for building the program executable. See `build_program/3` for a list of supported compiler and linker options.
+
+  `programs` \
+   A list of program objects that are compiled binaries or libraries that are to be linked to create the program executable. For each device in `devices` or if `devices` is empty the list of devices associated with `context`, the following cases occur:
+
+  - All programs specified by `programs` contain a compiled binary or library for the device. In this case, a link is performed to generate a program executable for this device.
+  - None of the programs contain a compiled binary or library for that device. In this case, no link is performed and there will be no program executable generated for this device.
+  - All other cases will return a `:invalid_operation` error.
   """
   @spec async_link_program(context::cl_context, devices::list(cl_device), options::binary, programs::list(cl_program)) :: {:ok, cl_program} | {:error, cl_error}
   def async_link_program(context, devices, options, programs) do
@@ -1175,7 +1307,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Returns all information about the program object.
+  Returns information about the program object.
+
+  ### Parameters
+
+  `program` \
+  Specifies the program object being queried.
   """
   @spec get_program_info(program::cl_program) :: {:ok, keyword()} | {:error, cl_error}
   def get_program_info(program) do
@@ -1183,7 +1320,15 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Returns all build information for the requested device in the program object.
+  Returns build information for each device in the program object.
+
+  ### Parameters
+
+  `program` \
+  Specifies the program object being queried.
+
+  `device` \
+  Specifies the device for which build information is being queried. `device` must be a valid device associated with `program`.
   """
   @spec get_program_build_info(program::cl_program, device::cl_device) :: {:ok, list(keyword())} | {:error, cl_error}
   def get_program_build_info(program, device) do

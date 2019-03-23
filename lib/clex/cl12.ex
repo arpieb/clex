@@ -67,14 +67,14 @@ defmodule Clex.CL12 do
 
   # Program Objects
   add_cl_func :create_program_with_source, [context, source]
-  add_cl_func :create_program_with_binary, [context, devices, binaries]
+  add_cl_func :create_program_with_binary, [context, device_binaries]
   add_cl_func :create_program_with_builtin_kernels, [context, devices, kernel_names]
   add_cl_func :retain_program, [program]
   add_cl_func :release_program, [program]
   add_cl_func :build_program, [program, devices, options]
   add_cl_func :build_program, [program, devices]
-  add_cl_func :compile_program, [program, devices, options, headers, names]
-  add_cl_func :async_compile_program, [program, devices, options, headers, names]
+  add_cl_func :compile_program, [program, devices, options, named_headers]
+  add_cl_func :async_compile_program, [program, devices, options, named_headers]
   add_cl_func :link_program, [context, devices, options, programs]
   add_cl_func :async_link_program, [context, devices, options, programs]
   add_cl_func :unload_platform_compiler, [platform]

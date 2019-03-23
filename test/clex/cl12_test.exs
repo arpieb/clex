@@ -628,9 +628,7 @@ defmodule Clex.CL12Test do
     {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
 
     options = ''
-    headers = []
-    names = []
-    assert :ok == CL12.compile_program(program, devices, options, headers, names)
+    assert :ok == CL12.compile_program(program, devices, options, [])
   end
 
   test "async_compile_program" do
@@ -640,9 +638,7 @@ defmodule Clex.CL12Test do
     {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
 
     options = ''
-    headers = []
-    names = []
-    {:ok, ref} = CL12.async_compile_program(program, devices, options, headers, names)
+    {:ok, ref} = CL12.async_compile_program(program, devices, options, [])
     assert is_reference(ref)
 
     reply = receive do
@@ -659,9 +655,7 @@ defmodule Clex.CL12Test do
     {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
 
     options = ''
-    headers = []
-    names = []
-    CL12.compile_program(program, devices, options, headers, names)
+    CL12.compile_program(program, devices, options, [])
 
     options = ''
     {:ok, linked_program} = CL12.link_program(context, devices, options, [program])
@@ -675,9 +669,7 @@ defmodule Clex.CL12Test do
     {:ok, program} = CL12.create_program_with_source(context, @kernel_source)
 
     options = ''
-    headers = []
-    names = []
-    CL12.compile_program(program, devices, options, headers, names)
+    CL12.compile_program(program, devices, options, [])
 
     options = ''
     {:ok, {ref, linked_program}} = CL12.async_link_program(context, devices, options, [program])

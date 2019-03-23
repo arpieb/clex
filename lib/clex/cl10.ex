@@ -54,7 +54,7 @@ defmodule Clex.CL10 do
 
   # Program Objects
   add_cl_func :create_program_with_source, [context, source]
-  add_cl_func :create_program_with_binary, [context, devices, binaries]
+  add_cl_func :create_program_with_binary, [context, device_binaries]
   add_cl_func :retain_program, [program]
   add_cl_func :release_program, [program]
   add_cl_func :unload_compiler, []
