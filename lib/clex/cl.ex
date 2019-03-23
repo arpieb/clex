@@ -1007,6 +1007,20 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Creates a sampler object.
+
+  ### Parameters
+
+  `context` \
+  Must be a valid OpenCL context.
+
+  `normalized` \
+  Determines if the image coordinates specified are normalized (`:true`) or not (`:false`).
+
+  `addressing_mode` \
+  Specifies how out-of-range image coordinates are handled when reading from an image. This can be set to one of `:none`, `:clamp_to_edge`, `:clamp`, or `:repeat`.
+
+  `filter_mode` \
+  Specifies the type of filter that must be applied when reading an image. This can be `:nearest` or`:linear`.
   """
   @spec create_sampler(context::cl_context, normalized::boolean, addressing_mode::cl_addressing_mode, filter_mode::cl_filter_mode) :: {:ok, cl_sampler} | {:error, cl_error}
   def create_sampler(context, normalized, addressing_mode, filter_mode) do
@@ -1036,6 +1050,11 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Returns information about the sampler object.
+
+  ### Parameters
+
+  `image` \
+  Specifies the sampler being queried.
   """
   @spec get_sampler_info(sampler::cl_sampler) :: {:ok, keyword()} | {:error, cl_error}
   def get_sampler_info(sampler) do
