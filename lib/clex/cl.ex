@@ -1340,7 +1340,17 @@ defmodule Clex.CL do
   ############################################################
 
   @doc ~S"""
-  Create a kernel object for the named function found in the given program.
+  Creates a kernel object.
+
+  A kernel is a function declared in a program. A kernel is identified by the `__kernel` qualifier applied to any function in a program. A kernel object encapsulates the specific `__kernel` function declared in a program and the argument values to be used when executing this `__kernel` function.
+
+  ### Parameters
+
+  `program` \
+  A program object with a successfully built executable.
+
+  `name` \
+  A function name in the program declared with the `__kernel` qualifier.
   """
   @spec create_kernel(program::cl_program, name::binary) :: {:ok, cl_kernel} | {:error, cl_error}
   def create_kernel(program, name) do
@@ -1348,7 +1358,16 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Create kernel objects for all functions found in the given program.
+  Creates kernel objects for all kernel functions in a program object.
+
+  Creates kernel objects for all kernel functions in program. Kernel objects are not created for any `__kernel` functions in program that do not have the same function definition across all devices for which a program executable has been successfully built.
+
+  Kernel objects can only be created once you have a program object with a valid program source or binary loaded into the program object and the program executable has been successfully built for one or more devices associated with program. No changes to the program executable are allowed while there are kernel objects associated with a program object. This means that calls to `build_program/2`, `build_program/3` and `compile_program/4` return `:invalid_operation` if there are kernel objects attached to a program object. The OpenCL context associated with program will be the context associated with kernel. The list of devices associated with program are the devices associated with kernel. Devices associated with a program object for which a valid program executable has been built can be used to execute kernels declared in the program object.
+
+  ### Parameters
+
+  `program` \
+  A program object with a successfully built executable.
   """
   @spec create_kernels_in_program(program::cl_program) :: {:ok, list(cl_kernel)} | {:error, cl_error}
   def create_kernels_in_program(program) do
@@ -1357,6 +1376,17 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Used to set the argument value for a specific argument of a kernel.
+
+  ### Parameters
+
+  `kernel` \
+  A valid kernel object.
+
+  `index` \
+  The argument index. Arguments to the kernel are referred by indices that go from 0 for the leftmost argument to n - 1, where n is the total number of arguments declared by a kernel.
+
+  `arg` \
+  Argument value to set, of one of the following types: `cl_mem`, `integer`, `float`, or `binary`.
   """
   @spec set_kernel_arg(kernel::cl_kernel, index::non_neg_integer, arg::cl_kernel_arg) :: :ok | {:error, cl_error}
   def set_kernel_arg(kernel, index, arg) do
@@ -1385,7 +1415,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Returns all information about the kernel object.
+  Returns information about the kernel object.
+
+  ### Parameters
+
+  `kernel` \
+  Specifies the kernel object being queried.
   """
   @spec get_kernel_info(kernel::cl_kernel) :: {:ok, keyword()} | {:error, cl_error}
   def get_kernel_info(kernel) do
@@ -1393,7 +1428,15 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Returns all information about the kernel workgroup.
+  Returns information about the kernel object that may be specific to a device.
+
+  ### Parameters
+
+  `kernel` \
+  Specifies the kernel object being queried.
+
+  `device` \
+  Identifies a specific device in the list of devices associated with `kernel`. The list of devices is the list of devices in the OpenCL context that is associated with `kernel`. If the list of devices associated with `kernel` is a single device, device can be `:nil`.
   """
   @spec get_kernel_workgroup_info(kernel::cl_kernel, device::cl_device) :: {:ok, keyword()} | {:error, cl_error}
   def get_kernel_workgroup_info(kernel, device) do
@@ -1402,6 +1445,11 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Returns all information about the arguments for a kernel.
+
+  ### Parameters
+
+  `kernel` \
+  Specifies the kernel object being queried.
   """
   @spec get_kernel_arg_info(kernel::cl_kernel) :: {:ok, list(keyword())} | {:error, cl_error}
   def get_kernel_arg_info(kernel) do
