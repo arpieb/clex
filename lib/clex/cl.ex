@@ -1462,6 +1462,17 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to execute a kernel on a device.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue. The kernel will be queued for execution on the device associated with `queue`.
+
+  `kernel` \
+  A valid kernel object. The OpenCL context associated with `kernel` and `queue` must be the same.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_task(queue, kernel, waitlist) do
@@ -1470,10 +1481,29 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a command to execute a kernel on a device.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue. The kernel will be queued for execution on the device associated with `queue`.
+
+  `kernel` \
+  A valid kernel object. The OpenCL context associated with `kernel` and `queue` must be the same.
+
+  `global_work_size` \
+  A list of unsigned values that describe the number of global work-items that will execute the kernel function.
+
+  `local_work_size` \
+  A list of unsigned values that describe the number of work-items that make up a work-group (also referred to as the size of the work-group) that will execute the kernel specified by kernel. The total number of work-items in the work-group must be less than or equal to the `:max_work_group_size` value specified in table of OpenCL Device Queries for `get_device_info/1` and the number of work-items specified in `local_work_size` must be less than or equal to the corresponding values specified by `:max_work_item_sizes`. The explicitly specified `local_work_size` will be used to determine how to break the global work-items specified by `global_work_size` into appropriate work-group instances. If `local_work_size` is specified, the values specified in `global_work_size` must be evenly divisible by the corresponding values specified in `local_work_size`.
+
+  local_work_size can also be a NULL value in which case the OpenCL implementation will determine how to be break the global work-items into appropriate work-group instances.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
-  @spec enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global::list(non_neg_integer), local::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_nd_range_kernel(queue, kernel, global, local, waitlist) do
-    :cl.enqueue_nd_range_kernel(queue, kernel, global, local, waitlist)
+  @spec enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global_work_size::list(non_neg_integer), local_work_size::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
+  def enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist) do
+    :cl.enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist)
   end
 
   ############################################################

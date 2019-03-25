@@ -91,7 +91,7 @@ defmodule Clex.CL12 do
   add_cl_func :get_kernel_workgroup_info, [kernel, device]
 
   # Executing Kernels
-  add_cl_func :enqueue_nd_range_kernel, [queue, kernel, global, local, waitlist]
+  add_cl_func :enqueue_nd_range_kernel, [queue, kernel, global_work_size, local_work_size, waitlist]
   add_cl_func :enqueue_task, [queue, kernel, waitlist]
   # clEnqueueNativeKernel
 
