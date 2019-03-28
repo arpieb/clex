@@ -1688,6 +1688,11 @@ defmodule Clex.CL do
   `flush/1` only guarantees that all queued commands to command queue get
   issued to the appropriate device. There is no guarantee that they
   will be complete after the call returns.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
   """
   @spec flush(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def flush(queue) do
@@ -1701,6 +1706,11 @@ defmodule Clex.CL do
   `async_flush/1` only guarantees that all queued commands to command queue get
   issued to the appropriate device. There is no guarantee that they
   will be complete after the call returns.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
   """
   @spec async_flush(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def async_flush(queue) do
@@ -1715,6 +1725,11 @@ defmodule Clex.CL do
   `finish/1` does not return until all queued commands in command_queue
   have been processed and completed. This function is also a
   synchronization point.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
   """
   @spec finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def finish(queue) do
@@ -1728,6 +1743,11 @@ defmodule Clex.CL do
 
   `async_finish/1` does not block until all queued commands in command_queue
   have been processed and completed, and there is no guarantee that all commands have been completed at return time.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
   """
   @spec async_finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def async_finish(queue) do
