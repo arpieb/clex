@@ -4,46 +4,72 @@ defmodule Clex.CL do
   """
 
   # OpenCL object types
+  @typedoc "Opaque reference to an OpenCL platform"
   @opaque cl_platform               :: {:platform_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL device"
   @opaque cl_device                 :: {:device_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL compute context"
   @opaque cl_context                :: {:context_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL command queue"
   @opaque cl_command_queue          :: {:command_queue_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL memory object"
   @opaque cl_mem                    :: {:mem_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL sampler object"
   @opaque cl_sampler                :: {:sampler_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL program object"
   @opaque cl_program                :: {:program_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL kernel object"
   @opaque cl_kernel                 :: {:kernel_t, any, reference}
+  @typedoc "Opaque reference to an OpenCL event object"
   @opaque cl_event                  :: {:event_t, any, reference}
+  @typedoc "OpenCL error response"
   @type   cl_error                  :: any
 
   # OpenCL flags and properties
+  @typedoc "OpenCL enumeration for device types"
   @type   cl_device_type            :: :gpu | :cpu | :accelerator | :custom | :all | :default
+  @typedoc "OpenCL enumeration for sub-device properties"
   @type   cl_sub_devices_property   :: {:equally, non_neg_integer} |
                                        {:by_counts, [non_neg_integer]} |
                                        {:by_affinity_domain, :numa | :l4_cache | :l3_cache | :l2_cache | :l1_cache | :next_partitionable}
+  @typedoc "OpenCL enumeration for command-queue properties"
   @type   cl_command_queue_property :: :out_of_order_exec_mode_enable | :profiling_enabled
+  @typedoc "OpenCL enumeration for memory object flags"
   @type   cl_mem_flag               :: :read_write | :write_only | :read_only | :use_host_ptr | :alloc_host_ptr | :copy_host_ptr
+  @typedoc "OpenCL enumeration for buffer creation types"
   @type   cl_buffer_create_type     :: :region
+  @typedoc "OpenCL enumeration for kernel argument types"
   @type   cl_kernel_arg             :: cl_mem | integer | float | binary
+  @typedoc "OpenCL enumeration for memory mapping flags"
   @type   cl_map_flag               :: :read | :write
   @type   cl_start_arg              :: {:debug, boolean}
+  @typedoc "OpenCL enumeration for memory object types"
   @type   cl_mem_object_type        :: :buffer | :image2d | :image3d |
                                        :image2d_array | :image1d | :image1d_array | :image1d_buffer
+  @typedoc "OpenCL enumeration for addressing modes"
   @type   cl_addressing_mode        :: :none | :clamp_to_edge | :clamp | :repeat
+  @typedoc "OpenCL enumeration for filter modes"
   @type   cl_filter_mode            :: :nearest | :linear
+  @typedoc "OpenCL enumeration for cache types"
   @type   cl_cache_type             :: :none | :read_only | :read_write
+  @typedoc "OpenCL enumeration for channel orders"
   @type   cl_channel_order          :: :r | :a | :rg | :ra | :rgb | :rgba | :bgra | :argb | :intensity | :luminance | :rx | :rgx | :rgbx | :depth | :depth_stencil
+  @typedoc "OpenCL enumeration for channel types"
   @type   cl_channel_type           :: :snorm_int8 | :snorm_int16 |
                                        :unorm_int8 | :unorm_int16  | :unorm_int24 | :unorm_short_565 | :unorm_short_555 | :unorm_int_101010 |
                                        :signed_int8 | :signed_int16 | :signed_int32 |
                                        :unsigned_int8 | :unsigned_int16 | :unsigned_int32 |
                                        :half_float | :float
+  @typedoc "OpenCL enumeration for memory object migration flags"
   @type   cl_mem_migration_flags    :: :host | :content_undefined
 
   # Records
   require Clex.CL.ImageFormat
   require Clex.CL.ImageDesc
 
+  @typedoc "Record representation of OpenCL `cl_image_format` structure"
   @type   cl_image_format           :: Clex.CL.ImageFormat.t
+  @typedoc "Record representation of OpenCL `cl_image_desc` structure"
   @type   cl_image_desc             :: Clex.CL.ImageDesc.t
 
   ############################################################
