@@ -1591,7 +1591,7 @@ defmodule Clex.CL do
   ### Parameters
 
   `waitlist` \
-  The events specified in `waitlist` act as synchronization points.
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec wait_for_events(waitlist::list(cl_event)) :: list({:ok, any} | {:error, cl_error})
   def wait_for_events(waitlist) do
@@ -1603,8 +1603,12 @@ defmodule Clex.CL do
   ############################################################
 
   @doc ~S"""
-  Enqueues a marker command to command_queue. The marker command returns an event which can be used to queue a wait on
-  this marker event i.e. wait for all commands queued before the marker command to complete.
+  Enqueues a marker command to `queue`. The marker command is not completed until all commands enqueued before it have completed. The marker command returns a `cl_event` which can be waited on, i.e. this event can be waited on to ensure that all commands which have been queued before the marker command have been completed.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
   """
   @spec enqueue_marker(queue::cl_command_queue) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_marker(queue) do
@@ -1612,7 +1616,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Enqueues a synchonrization point that ensures all prior commands in the given queue have completed.
+  Enqueues a synchronization point that ensures that all queued commands in `queue` have finished execution before the next batch of commands can begin execution.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
   """
   @spec enqueue_barrier(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def enqueue_barrier(queue) do
@@ -1622,6 +1631,14 @@ defmodule Clex.CL do
   @doc ~S"""
   Enqueues a wait for a specific event or a list of events to complete before any future commands queued in the
   queue are executed.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_wait_for_events(queue::cl_command_queue, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
   def enqueue_wait_for_events(queue, waitlist) do
@@ -1630,6 +1647,14 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Enqueues a marker command which waits for either a list of events to complete, or all previously enqueued commands to complete.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_marker_with_wait_list(queue::cl_command_queue, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_marker_with_wait_list(queue, waitlist) do
@@ -1638,6 +1663,14 @@ defmodule Clex.CL do
 
   @doc ~S"""
   A synchronization point that enqueues a barrier operation.
+
+  ### Parameters
+
+  `queue` \
+  A valid command-queue.
+
+  `waitlist` \
+  Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
   @spec enqueue_barrier_with_wait_list(queue::cl_command_queue, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_barrier_with_wait_list(queue, waitlist) do
