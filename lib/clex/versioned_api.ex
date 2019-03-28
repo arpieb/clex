@@ -21,13 +21,14 @@ defmodule Clex.VersionedApi do
   add_cl_func :get_device_ids, [platform, device_type]
   ```
   """
-  defmacro add_cl_func(name, args) do
+  defmacro add_cl_func(group, name, args) do
     arity = length(args)
 
     quote do
       @doc """
       See `Clex.CL.#{unquote(name)}/#{unquote(arity)}` for full function parameter specification.
       """
+      @doc group: unquote(group)
       def unquote(name)(unquote_splicing(args)) do
         Clex.CL.unquote(name)(unquote_splicing(args))
       end

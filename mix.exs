@@ -23,8 +23,22 @@ defmodule Clex.MixProject do
         extras: [
           "README.md",
           "LICENSE.md"
-        ]
-      ]
+        ],
+        groups_for_functions: [
+          "Platform": & &1[:group] == :platform,
+          "Devices": & &1[:group] == :devices,
+          "Context": & &1[:group] == :context,
+          "Command Queues": & &1[:group] == :command_queues,
+          "Memory Objects": & &1[:group] == :memory_objects,
+          "Sampler Objects": & &1[:group] == :sampler_objects,
+          "Program Objects": & &1[:group] == :program_objects,
+          "Kernel Objects": & &1[:group] == :kernel_objects,
+          "Execution of Kernels": & &1[:group] == :exec_kernels,
+          "Event Objects": & &1[:group] == :event_objects,
+          "Synchronization": & &1[:group] == :synchronization,
+          "Flush and Finish": & &1[:group] == :flush_and_finish,
+        ],
+      ],
     ]
   end
 

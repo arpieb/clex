@@ -53,6 +53,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Obtain the list of platforms available.
   """
+  @doc group: :platform
   @spec get_platform_ids() :: {:ok, list(cl_platform)} | {:error, cl_error}
   def get_platform_ids() do
     :cl.get_platform_ids()
@@ -66,6 +67,7 @@ defmodule Clex.CL do
   `platform` \
   A platform ID returned by `get_platform_ids/0`.
   """
+  @doc group: :platform
   @spec get_platform_info(platform::cl_platform) :: {:ok, keyword()} | {:error, cl_error}
   def get_platform_info(platform) do
     :cl.get_platform_info(platform)
@@ -86,6 +88,7 @@ defmodule Clex.CL do
   `device_type` \
   One of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
   """
+  @doc group: :devices
   @spec get_device_ids(platform::cl_platform, device_type::cl_device_type) :: {:ok, list(cl_device)} | {:error, cl_error}
   def get_device_ids(platform, device_type) do
     :cl.get_device_ids(platform, device_type)
@@ -99,6 +102,7 @@ defmodule Clex.CL do
   `device` \
   Device reference returned by `get_device_ids/2` or a sub-device created by `create_sub_devices/2`.  If `device` is a sub-device, the specific information for the sub-device will be returned.
   """
+  @doc group: :devices
   @spec get_device_info(device::cl_device) :: {:ok, keyword()} | {:error, cl_error}
   def get_device_info(device) do
     :cl.get_device_info(device)
@@ -122,6 +126,7 @@ defmodule Clex.CL do
   `{:by_counts, [m::non_neg_integer]}` | This property is followed by a list of compute unit counts. For each nonzero count `m` in the list, a sub-device is created with `m` compute units in it. The number of non-zero count entries in the list may not exceed `:partition_max_sub_devices`. The total number of compute units specified may not exceed `:partition_max_compute_units`.
   `{:by_affinity_domain, domain}`      | Split the device into smaller aggregate devices containing one or more compute units that all share part of a cache hierarchy. The value accompanying this property may be drawn from the following list: `:numa`, `:l4_cache`, `:l3_cache`, `:l2_cache`, `:l1_cache`, `:next_partitionable`.
   """
+  @doc group: :devices
   @spec create_sub_devices(device::cl_device, property::cl_sub_devices_property) :: {:ok, list(cl_device)} | {:error, cl_error}
   def create_sub_devices(device, property) do
     :cl.create_sub_devices(device, property)
@@ -132,6 +137,7 @@ defmodule Clex.CL do
 
   To increment the reference count, see `retain_device/1`.
   """
+  @doc group: :devices
   @spec release_device(device::cl_device) :: :ok | {:error, cl_error}
   def release_device(device) do
     :cl.release_device(device)
@@ -142,6 +148,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_device/1`.
   """
+  @doc group: :devices
   @spec retain_device(device::cl_device) :: :ok | {:error, cl_error}
   def retain_device(device) do
     :cl.retain_device(device)
@@ -159,6 +166,7 @@ defmodule Clex.CL do
   `devices` \
   List of device references returned by `get_device_ids/2` or sub-devices created by `create_sub_devices/2`.
   """
+  @doc group: :context
   @spec create_context(devices::list(cl_device)) :: {:ok, cl_context} | {:error, cl_error}
   def create_context(devices) do
     :cl.create_context(devices)
@@ -175,6 +183,7 @@ defmodule Clex.CL do
   `device_type` \
   One of `:gpu`, `:cpu`, `:accelerator`, `:custom`, `:all`, or `:default`.
   """
+  @doc group: :context
   @spec create_context_from_type(platform::cl_platform, device_type::cl_device_type) :: {:ok, cl_context} | {:error, cl_error}
   def create_context_from_type(platform, device_type) do
     case get_device_ids(platform, device_type) do
@@ -190,6 +199,7 @@ defmodule Clex.CL do
 
   To increment the reference count, see `retain_context/1`.
   """
+  @doc group: :context
   @spec release_context(context::cl_context) :: :ok | {:error, cl_error}
   def release_context(context) do
     :cl.release_context(context)
@@ -200,6 +210,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_context/1`.
   """
+  @doc group: :context
   @spec retain_context(context::cl_context) :: :ok | {:error, cl_error}
   def retain_context(context) do
     :cl.retain_context(context)
@@ -213,6 +224,7 @@ defmodule Clex.CL do
   `context` \
   Specifies the OpenCL context being queried.
   """
+  @doc group: :context
   @spec get_context_info(context::cl_context) :: {:ok, keyword()} | {:error, cl_error}
   def get_context_info(context) do
     :cl.get_context_info(context)
@@ -243,6 +255,7 @@ defmodule Clex.CL do
 
   _Note that `clGetEventProfiling` is not implemented yet in Clex, so `:profiling_enabled` is essentially a NOOP._
   """
+  @doc group: :command_queues
   @spec create_queue(context::cl_context, device::cl_device, properties::list(cl_command_queue_property)) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device, properties) do
     :cl.create_queue(context, device, properties)
@@ -259,6 +272,7 @@ defmodule Clex.CL do
   `device` \
   Must be a device associated with context. It can either be in the list of devices specified when context is created using `create_context/1` or have the same device type as the device type specified when the context is created using `create_context_from_type/2`.
   """
+  @doc group: :command_queues
   @spec create_queue(context::cl_context, device::cl_device) :: {:ok, cl_command_queue} | {:error, cl_error}
   def create_queue(context, device) do
     :cl.create_queue(context, device, [])
@@ -269,16 +283,18 @@ defmodule Clex.CL do
 
   To increment the reference count, see `retain_queue/1`.
   """
+  @doc group: :command_queues
   @spec release_queue(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def release_queue(queue) do
     :cl.release_queue(queue)
   end
 
   @doc ~S"""
-  Decrements the `queue` reference count.
+  Increments the `queue` reference count.
 
   To decrement the reference count, see `release_queue/1`.
   """
+  @doc group: :command_queues
   @spec retain_queue(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def retain_queue(queue) do
     :cl.retain_queue(queue)
@@ -292,13 +308,14 @@ defmodule Clex.CL do
   `queue` \
   Specifies the command-queue being queried.
   """
+  @doc group: :command_queues
   @spec get_queue_info(queue::cl_command_queue) :: {:ok, keyword()} | {:error, cl_error}
   def get_queue_info(queue) do
     :cl.get_queue_info(queue)
   end
 
   ############################################################
-  # Memory Object
+  # Memory Objects
   ############################################################
 
   @doc ~S"""
@@ -324,6 +341,7 @@ defmodule Clex.CL do
   `size` \
     The size in bytes of the buffer memory object to be allocated.
   """
+  @doc group: :memory_objects
   @spec create_buffer(context::cl_context, flags::list(cl_mem_flag), size::non_neg_integer) :: {:ok, cl_mem} | {:error, cl_error}
   def create_buffer(context, flags, size) do
     :cl.create_buffer(context, flags, size)
@@ -355,6 +373,7 @@ defmodule Clex.CL do
   `data` \
   Buffer data that may already be allocated by the application, used to initialize the newly created buffer based on `flags` settings.
   """
+  @doc group: :memory_objects
   @spec create_buffer(context::cl_context, flags::list(cl_mem_flag), size::non_neg_integer, data::iolist) :: {:ok, cl_mem} | {:error, cl_error}
   def create_buffer(context, flags, size, data) do
     :cl.create_buffer(context, flags, size, data)
@@ -389,6 +408,7 @@ defmodule Clex.CL do
   `size` \
   The size in bytes of the sub-buffer memory object to be allocated.
   """
+  @doc group: :memory_objects
   @spec create_sub_buffer(buffer::cl_mem, flags::list(cl_mem_flag), type::cl_buffer_create_type, origin::non_neg_integer, size::non_neg_integer) :: {:ok, cl_mem} | {:error, cl_error}
   def create_sub_buffer(buffer, flags, type, origin, size) do
     :cl.create_sub_buffer(buffer, flags, type, [origin, size])
@@ -399,6 +419,7 @@ defmodule Clex.CL do
 
   To increment the reference count, see `retain_mem_object/1`.
   """
+  @doc group: :memory_objects
   @spec release_mem_object(buffer::cl_mem) :: :ok | {:error, cl_error}
   def release_mem_object(buffer) do
     :cl.release_mem_object(buffer)
@@ -409,6 +430,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_mem_object/1`.
   """
+  @doc group: :memory_objects
   @spec retain_mem_object(buffer::cl_mem) :: :ok | {:error, cl_error}
   def retain_mem_object(buffer) do
     :cl.retain_mem_object(buffer)
@@ -422,6 +444,7 @@ defmodule Clex.CL do
   `buffer` \
   Specifies the memory object being queried.
   """
+  @doc group: :memory_objects
   @spec get_mem_object_info(buffer::cl_mem) :: {:ok, keyword()} | {:error, cl_error}
   def get_mem_object_info(buffer) do
     :cl.get_mem_object_info(buffer)
@@ -445,6 +468,7 @@ defmodule Clex.CL do
 
   See `get_supported_image_formats/3` to discover what formats are supported by your OpenCL device.
   """
+  @doc group: :memory_objects
   @spec create_image2d(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, width::non_neg_integer, height::non_neg_integer, row_pitch::non_neg_integer, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
   def create_image2d(context, flags, image_format, width, height, row_pitch, data) do
     :cl.create_image2d(context, flags, image_format, width, height, row_pitch, data)
@@ -468,6 +492,7 @@ defmodule Clex.CL do
 
   See `get_supported_image_formats/3` to discover what formats are supported by your OpenCL device.
   """
+  @doc group: :memory_objects
   @spec create_image3d(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, width::non_neg_integer, height::non_neg_integer, depth::non_neg_integer, row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
   def create_image3d(context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data) do
     :cl.create_image3d(context, flags, image_format, width, height, depth, row_pitch, slice_pitch, data)
@@ -496,6 +521,7 @@ defmodule Clex.CL do
   `image_type` \
   Describes the image type and must be either `:image1d`, `:image1d_buffer`, `:image2d`, `:image3d`, `:image1d_array` or `:image2d_array`.
   """
+  @doc group: :memory_objects
   @spec get_supported_image_formats(context::cl_context, flags::list(cl_mem_flag), image_type::cl_mem_object_type) :: {:ok, list(tuple)} | {:error, cl_error}
   def get_supported_image_formats(context, flags, image_type) do
     :cl.get_supported_image_formats(context, flags, image_type)
@@ -527,6 +553,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_read_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist) do
     :cl.enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist)
@@ -561,6 +588,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_write_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist) do
     :cl.enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist)
@@ -600,6 +628,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_copy_image(queue::cl_command_queue, src_image::cl_mem, dest_image::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist) do
     :cl.enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist)
@@ -631,6 +660,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_copy_image_to_buffer(queue::cl_command_queue, src_image::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), region::list(non_neg_integer), dest_offset::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist) do
     :cl.enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist)
@@ -662,6 +692,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_copy_buffer(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_offset::non_neg_integer, dest_offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist) do
     :cl.enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist)
@@ -695,6 +726,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_copy_buffer_to_image(queue::cl_command_queue, src_buffer::cl_mem, dest_image::cl_mem, src_offset::non_neg_integer, dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist) do
     :cl.enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist)
@@ -708,6 +740,7 @@ defmodule Clex.CL do
   `image` \
   Specifies the image being queried.
   """
+  @doc group: :memory_objects
   @spec get_image_info(image::cl_mem) :: {:ok, keyword()} | {:error, cl_error}
   def get_image_info(image) do
     :cl.get_image_info(image)
@@ -748,6 +781,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_read_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist) do
     :cl.enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist)
@@ -791,6 +825,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_write_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist) do
     :cl.enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist)
@@ -834,6 +869,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_copy_buffer_rect(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), src_row_pitch::non_neg_integer, src_slice_pitch::non_neg_integer, dest_row_pitch::non_neg_integer, dest_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist) do
     # TODO something in the event handler for this function has an issue; tends to segfault when calling wait_for_events/1. :(
@@ -863,6 +899,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_fill_buffer(queue::cl_command_queue, buffer::cl_mem, pattern::binary, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist) do
     :cl.enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist)
@@ -888,6 +925,7 @@ defmodule Clex.CL do
 
   See `get_supported_image_formats/3` to discover what formats are supported by your OpenCL device.
   """
+  @doc group: :memory_objects
   @spec create_image(context::cl_context, flags::list(cl_mem_flag), image_format::cl_image_format, image_desc::cl_image_desc, data::binary) :: {:ok, cl_mem} | {:error, cl_error}
   def create_image(context, flags, image_format, image_desc, data) do
     :cl.create_image(context, flags, image_format, image_desc, data)
@@ -916,6 +954,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_fill_image(queue::cl_command_queue, image::cl_mem, fill_color::binary, origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_fill_image(queue, image, fill_color, origin, region, waitlist) do
     :cl.enqueue_fill_image(queue, image, fill_color, origin, region, waitlist)
@@ -943,6 +982,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_migrate_mem_objects(queue::cl_command_queue, mem_objects::list(cl_mem), flags::list(cl_mem_migration_flags), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist) do
     :cl.enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist)
@@ -968,6 +1008,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_read_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_read_buffer(queue, buffer, offset, size, waitlist) do
     :cl.enqueue_read_buffer(queue, buffer, offset, size, waitlist)
@@ -996,6 +1037,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :memory_objects
   @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
     :cl.enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
@@ -1022,6 +1064,7 @@ defmodule Clex.CL do
   `filter_mode` \
   Specifies the type of filter that must be applied when reading an image. This can be `:nearest` or`:linear`.
   """
+  @doc group: :sampler_objects
   @spec create_sampler(context::cl_context, normalized::boolean, addressing_mode::cl_addressing_mode, filter_mode::cl_filter_mode) :: {:ok, cl_sampler} | {:error, cl_error}
   def create_sampler(context, normalized, addressing_mode, filter_mode) do
     :cl.create_sampler(context, normalized, addressing_mode, filter_mode)
@@ -1032,6 +1075,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_sampler/1`.
   """
+  @doc group: :sampler_objects
   @spec retain_sampler(sampler::cl_sampler) :: :ok | {:error, cl_error}
   def retain_sampler(sampler) do
     :cl.retain_sampler(sampler)
@@ -1043,6 +1087,7 @@ defmodule Clex.CL do
   Once the reference count goes to zero and all attached resources are released, the sampler is deleted.
   To increment the reference count, see `retain_sampler/1`.
   """
+  @doc group: :sampler_objects
   @spec release_sampler(sampler::cl_sampler) :: :ok | {:error, cl_error}
   def release_sampler(sampler) do
     :cl.release_sampler(sampler)
@@ -1056,6 +1101,7 @@ defmodule Clex.CL do
   `sampler` \
   Specifies the sampler being queried.
   """
+  @doc group: :sampler_objects
   @spec get_sampler_info(sampler::cl_sampler) :: {:ok, keyword()} | {:error, cl_error}
   def get_sampler_info(sampler) do
     :cl.get_sampler_info(sampler)
@@ -1076,6 +1122,7 @@ defmodule Clex.CL do
   `source` \
   The textual source code to be loaded into the program pbject.  The devices associated with the program object are the devices associated with context. The source code provided is either an OpenCL C program source, header or implementation-defined source for custom devices that support an online compiler.
   """
+  @doc group: :program_objects
   @spec create_program_with_source(context::cl_context, source::iodata) :: {:ok, cl_program} | {:error, cl_error}
   def create_program_with_source(context, source) do
     :cl.create_program_with_source(context, source)
@@ -1096,6 +1143,7 @@ defmodule Clex.CL do
   - A compiled program for device(s) associated with `context`.
   - A library of compiled programs for device(s) associated with `context`.
   """
+  @doc group: :program_objects
   @spec create_program_with_binary(context::cl_context, device_binaries::list({cl_device, binary})) :: {:ok, cl_program} | {:error, cl_error}
   def create_program_with_binary(context, device_binaries) do
     {devices, binaries} = Enum.unzip(device_binaries)
@@ -1118,6 +1166,7 @@ defmodule Clex.CL do
   `kernel_names` \
   A list of built-in kernel names.
   """
+  @doc group: :program_objects
   @spec create_program_with_builtin_kernels(context::cl_context, devices::list(cl_device), kernel_names::list(binary)) :: {:ok, cl_program} | {:error, cl_error}
   def create_program_with_builtin_kernels(context, devices, kernel_names) do
     :cl.create_program_with_builtin_kernels(context, devices, Enum.join(kernel_names, ";"))
@@ -1129,6 +1178,7 @@ defmodule Clex.CL do
   Once the reference count goes to zero and all attached resources are released, the program is deleted.
   To increment the reference count, see `retain_program/1`.
   """
+  @doc group: :program_objects
   @spec release_program(program::cl_program) :: :ok | {:error, cl_error}
   def release_program(program) do
     :cl.release_program(program)
@@ -1139,6 +1189,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_program/1`.
   """
+  @doc group: :program_objects
   @spec retain_program(program::cl_program) :: :ok | {:error, cl_error}
   def retain_program(program) do
     :cl.retain_program(program)
@@ -1162,6 +1213,7 @@ defmodule Clex.CL do
   - [OpenCL 1.1 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.1/docs/man/xhtml/clBuildProgram.html)
   - [OpenCL 1.2 clBuildProgram](https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html)
   """
+  @doc group: :program_objects
   @spec build_program(program::cl_program, devices::list(cl_device), options::binary) :: :ok | {:error, cl_error}
   def build_program(program, devices, options) do
     :cl.build_program(program, devices, options)
@@ -1178,6 +1230,7 @@ defmodule Clex.CL do
   `devices` \
   A list of devices associated with `program`. If `devices` is empty, the program executable is built for all devices associated with program for which a source or binary has been loaded. If `devices` is not empty, the program executable is built for devices specified in this list for which a source or binary has been loaded.
   """
+  @doc group: :program_objects
   @spec build_program(program::cl_program, devices::list(cl_device)) :: :ok | {:error, cl_error}
   def build_program(program, devices) do
     :cl.build_program(program, devices, '')
@@ -1186,6 +1239,7 @@ defmodule Clex.CL do
   @doc ~S"""
   Allows the implementation to release the resources allocated by the OpenCL compiler.
   """
+  @doc group: :program_objects
   @spec unload_compiler() :: :ok | {:error, cl_error}
   def unload_compiler() do
     :cl.unload_compiler()
@@ -1199,6 +1253,7 @@ defmodule Clex.CL do
   `platform` \
   A valid platform reference returned by `get_platform_ids/0`.
   """
+  @doc group: :program_objects
   @spec unload_platform_compiler(platform::cl_platform) :: :ok | {:error, cl_error}
   def unload_platform_compiler(platform) do
     :cl.unload_platform_compiler(platform)
@@ -1223,6 +1278,7 @@ defmodule Clex.CL do
   `named_headers` \
   A list of tuples of the form `{name, header}` where `name` specifies the include name used by source in `program` that comes from an embedded header and `header` is the program object which contains the header source to be used.  If multiple entries in `named_headers` refer to the same header name, the first one encountered will be used.
   """
+  @doc group: :program_objects
   @spec compile_program(program::cl_program, devices::list(cl_device), options::binary, named_headers::list({binary, cl_program})) :: :ok | {:error, cl_error}
   def compile_program(program, devices, options, named_headers) do
     {names, headers} = Enum.unzip(named_headers)
@@ -1248,6 +1304,7 @@ defmodule Clex.CL do
   `named_headers` \
   A list of tuples of the form `{name, header}` where `name` specifies the include name used by source in `program` that comes from an embedded header and `header` is the program object which contains the header source to be used.  If multiple entries in `named_headers` refer to the same header name, the first one encountered will be used.
   """
+  @doc group: :program_objects
   @spec async_compile_program(program::cl_program, devices::list(cl_device), options::binary, named_headers::list({binary, cl_program})) :: :ok | {:error, cl_error}
   def async_compile_program(program, devices, options, named_headers) do
     {names, headers} = Enum.unzip(named_headers)
@@ -1275,6 +1332,7 @@ defmodule Clex.CL do
   - None of the programs contain a compiled binary or library for that device. In this case, no link is performed and there will be no program executable generated for this device.
   - All other cases will return a `:invalid_operation` error.
   """
+  @doc group: :program_objects
   @spec link_program(context::cl_context, devices::list(cl_device), options::binary, programs::list(cl_program)) :: {:ok, cl_program} | {:error, cl_error}
   def link_program(context, devices, options, programs) do
     :cl.link_program(context, devices, options, programs)
@@ -1301,6 +1359,7 @@ defmodule Clex.CL do
   - None of the programs contain a compiled binary or library for that device. In this case, no link is performed and there will be no program executable generated for this device.
   - All other cases will return a `:invalid_operation` error.
   """
+  @doc group: :program_objects
   @spec async_link_program(context::cl_context, devices::list(cl_device), options::binary, programs::list(cl_program)) :: {:ok, cl_program} | {:error, cl_error}
   def async_link_program(context, devices, options, programs) do
     :cl.async_link_program(context, devices, options, programs)
@@ -1314,6 +1373,7 @@ defmodule Clex.CL do
   `program` \
   Specifies the program object being queried.
   """
+  @doc group: :program_objects
   @spec get_program_info(program::cl_program) :: {:ok, keyword()} | {:error, cl_error}
   def get_program_info(program) do
     :cl.get_program_info(program)
@@ -1330,6 +1390,7 @@ defmodule Clex.CL do
   `device` \
   Specifies the device for which build information is being queried. `device` must be a valid device associated with `program`.
   """
+  @doc group: :program_objects
   @spec get_program_build_info(program::cl_program, device::cl_device) :: {:ok, list(keyword())} | {:error, cl_error}
   def get_program_build_info(program, device) do
     :cl.get_program_build_info(program, device)
@@ -1352,6 +1413,7 @@ defmodule Clex.CL do
   `name` \
   A function name in the program declared with the `__kernel` qualifier.
   """
+  @doc group: :kernel_objects
   @spec create_kernel(program::cl_program, name::binary) :: {:ok, cl_kernel} | {:error, cl_error}
   def create_kernel(program, name) do
     :cl.create_kernel(program, name)
@@ -1369,6 +1431,7 @@ defmodule Clex.CL do
   `program` \
   A program object with a successfully built executable.
   """
+  @doc group: :kernel_objects
   @spec create_kernels_in_program(program::cl_program) :: {:ok, list(cl_kernel)} | {:error, cl_error}
   def create_kernels_in_program(program) do
     :cl.create_kernels_in_program(program)
@@ -1388,6 +1451,7 @@ defmodule Clex.CL do
   `arg` \
   Argument value to set, of one of the following types: `cl_mem`, `integer`, `float`, or `binary`.
   """
+  @doc group: :kernel_objects
   @spec set_kernel_arg(kernel::cl_kernel, index::non_neg_integer, arg::cl_kernel_arg) :: :ok | {:error, cl_error}
   def set_kernel_arg(kernel, index, arg) do
     :cl.set_kernel_arg(kernel, index, arg)
@@ -1399,6 +1463,7 @@ defmodule Clex.CL do
   Once the reference count goes to zero and all attached resources are released, the kernel is deleted.
   To increment the reference count, see `retain_kernel/1`.
   """
+  @doc group: :kernel_objects
   @spec release_kernel(kernel::cl_kernel) :: :ok | {:error, cl_error}
   def release_kernel(kernel) do
     :cl.release_kernel(kernel)
@@ -1409,6 +1474,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_kernel/1`.
   """
+  @doc group: :kernel_objects
   @spec retain_kernel(kernel::cl_kernel) :: :ok | {:error, cl_error}
   def retain_kernel(kernel) do
     :cl.retain_kernel(kernel)
@@ -1422,6 +1488,7 @@ defmodule Clex.CL do
   `kernel` \
   Specifies the kernel object being queried.
   """
+  @doc group: :kernel_objects
   @spec get_kernel_info(kernel::cl_kernel) :: {:ok, keyword()} | {:error, cl_error}
   def get_kernel_info(kernel) do
     :cl.get_kernel_info(kernel)
@@ -1438,6 +1505,7 @@ defmodule Clex.CL do
   `device` \
   Identifies a specific device in the list of devices associated with `kernel`. The list of devices is the list of devices in the OpenCL context that is associated with `kernel`. If the list of devices associated with `kernel` is a single device, device can be `:nil`.
   """
+  @doc group: :kernel_objects
   @spec get_kernel_workgroup_info(kernel::cl_kernel, device::cl_device) :: {:ok, keyword()} | {:error, cl_error}
   def get_kernel_workgroup_info(kernel, device) do
     :cl.get_kernel_workgroup_info(kernel, device)
@@ -1451,6 +1519,7 @@ defmodule Clex.CL do
   `kernel` \
   Specifies the kernel object being queried.
   """
+  @doc group: :kernel_objects
   @spec get_kernel_arg_info(kernel::cl_kernel) :: {:ok, list(keyword())} | {:error, cl_error}
   def get_kernel_arg_info(kernel) do
     :cl.get_kernel_arg_info(kernel)
@@ -1474,6 +1543,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :exec_kernels
   @spec enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_task(queue, kernel, waitlist) do
     :cl.enqueue_task(queue, kernel, waitlist)
@@ -1501,6 +1571,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :exec_kernels
   @spec enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global_work_size::list(non_neg_integer), local_work_size::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist) do
     :cl.enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist)
@@ -1515,6 +1586,7 @@ defmodule Clex.CL do
 
   To increment the reference count, see `retain_event/1`.
   """
+  @doc group: :event_objects
   @spec release_event(event::cl_event) :: :ok | {:error, cl_error}
   def release_event(event) do
     :cl.release_event(event)
@@ -1525,6 +1597,7 @@ defmodule Clex.CL do
 
   To decrement the reference count, see `release_event/1`.
   """
+  @doc group: :event_objects
   @spec retain_event(event::cl_event) :: :ok | {:error, cl_error}
   def retain_event(event) do
     :cl.retain_event(event)
@@ -1538,6 +1611,7 @@ defmodule Clex.CL do
   `event` \
   Specifies the event object being queried.
   """
+  @doc group: :event_objects
   @spec get_event_info(event::cl_event) :: {:ok, list(keyword())} | {:error, cl_error}
   def get_event_info(event) do
     :cl.get_event_info(event)
@@ -1551,6 +1625,7 @@ defmodule Clex.CL do
   `event` \
   Specifies the event object being waited on.
   """
+  @doc group: :event_objects
   @spec wait(event::cl_event) :: {:ok, any} | {:error, cl_error}
   def wait(event) do
     :cl.wait(event)
@@ -1567,6 +1642,7 @@ defmodule Clex.CL do
   `timeout` \
   Timeout for wait, in milliseconds.
   """
+  @doc group: :event_objects
   @spec wait(event::cl_event, timeout::non_neg_integer) :: {:ok, any} | {:error, cl_error} | {:error, timeout}
   def wait(event, timeout) do
     :cl.wait(event, timeout)
@@ -1574,12 +1650,14 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Generate a wait operation that will run non blocking.
+
   A reference is returned that can be used to match the event
   that is sent when the event has completed or resulted in an error.
   The event returned has the form `{:cl_event, Ref, Result}`
   where Ref is the reference that was returned from the call and
   Result may be one of `binary` | `:complete`, or `{:error, cl_error}`.
   """
+  @doc group: :event_objects
   @spec async_wait_for_event(event::cl_event) :: {:ok, reference} | {:error, cl_error}
   def async_wait_for_event(event) do
     :cl.async_wait_for_event(event)
@@ -1593,23 +1671,27 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :event_objects
   @spec wait_for_events(waitlist::list(cl_event)) :: list({:ok, any} | {:error, cl_error})
   def wait_for_events(waitlist) do
     :cl.wait_for_events(waitlist)
   end
 
   ############################################################
-  # Execution of Kernels and Memory Object Commands
+  # Synchronization
   ############################################################
 
   @doc ~S"""
-  Enqueues a marker command to `queue`. The marker command is not completed until all commands enqueued before it have completed. The marker command returns a `cl_event` which can be waited on, i.e. this event can be waited on to ensure that all commands which have been queued before the marker command have been completed.
+  Enqueues a marker command to `queue`.
+
+  The marker command is not completed until all commands enqueued before it have completed. The marker command returns a `cl_event` which can be waited on, i.e. this event can be waited on to ensure that all commands which have been queued before the marker command have been completed.
 
   ### Parameters
 
   `queue` \
   A valid command-queue.
   """
+  @doc group: :synchronization
   @spec enqueue_marker(queue::cl_command_queue) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_marker(queue) do
     :cl.enqueue_marker(queue)
@@ -1623,6 +1705,7 @@ defmodule Clex.CL do
   `queue` \
   A valid command-queue.
   """
+  @doc group: :synchronization
   @spec enqueue_barrier(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def enqueue_barrier(queue) do
     :cl.enqueue_barrier(queue)
@@ -1640,6 +1723,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :synchronization
   @spec enqueue_wait_for_events(queue::cl_command_queue, waitlist::list(cl_event)) :: :ok | {:error, cl_error}
   def enqueue_wait_for_events(queue, waitlist) do
     :cl.enqueue_wait_for_events(queue, waitlist)
@@ -1656,6 +1740,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :synchronization
   @spec enqueue_marker_with_wait_list(queue::cl_command_queue, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_marker_with_wait_list(queue, waitlist) do
     :cl.enqueue_marker_with_wait_list(queue, waitlist)
@@ -1672,6 +1757,7 @@ defmodule Clex.CL do
   `waitlist` \
   Specify events that need to complete before this particular command can be executed. If `waitlist` is empty, then this particular command does not wait on any event to complete. The events specified in `waitlist` act as synchronization points. The context associated with events in `waitlist` and `queue` must be the same.
   """
+  @doc group: :synchronization
   @spec enqueue_barrier_with_wait_list(queue::cl_command_queue, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
   def enqueue_barrier_with_wait_list(queue, waitlist) do
     :cl.enqueue_barrier_with_wait_list(queue, waitlist)
@@ -1694,6 +1780,7 @@ defmodule Clex.CL do
   `queue` \
   A valid command-queue.
   """
+  @doc group: :flush_and_finish
   @spec flush(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def flush(queue) do
     :cl.flush(queue)
@@ -1712,6 +1799,7 @@ defmodule Clex.CL do
   `queue` \
   A valid command-queue.
   """
+  @doc group: :flush_and_finish
   @spec async_flush(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def async_flush(queue) do
     :cl.async_flush(queue)
@@ -1731,6 +1819,7 @@ defmodule Clex.CL do
   `queue` \
   A valid command-queue.
   """
+  @doc group: :flush_and_finish
   @spec finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def finish(queue) do
     :cl.finish(queue)
@@ -1749,6 +1838,7 @@ defmodule Clex.CL do
   `queue` \
   A valid command-queue.
   """
+  @doc group: :flush_and_finish
   @spec async_finish(queue::cl_command_queue) :: :ok | {:error, cl_error}
   def async_finish(queue) do
     :cl.async_finish(queue)
