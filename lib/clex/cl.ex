@@ -1513,7 +1513,6 @@ defmodule Clex.CL do
   @doc ~S"""
   Decrement the reference count on an event.
 
-  Once the reference count goes to zero and all attached resources are released, the event is deleted.
   To increment the reference count, see `retain_event/1`.
   """
   @spec release_event(event::cl_event) :: :ok | {:error, cl_error}
@@ -1532,7 +1531,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Returns all specific information about the event object.
+  Returns information about the event object.
+
+  ### Parameters
+
+  `event` \
+  Specifies the event object being queried.
   """
   @spec get_event_info(event::cl_event) :: {:ok, list(keyword())} | {:error, cl_error}
   def get_event_info(event) do
@@ -1541,6 +1545,11 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Blocking wait for event to complete, no timeout.
+
+  ### Parameters
+
+  `event` \
+  Specifies the event object being waited on.
   """
   @spec wait(event::cl_event) :: {:ok, any} | {:error, cl_error}
   def wait(event) do
@@ -1549,6 +1558,14 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Blocking wait for event to complete, with timeout in milliseconds.
+
+  ### Parameters
+
+  `event` \
+  Specifies the event object being waited on.
+
+  `timeout` \
+  Timeout for wait, in milliseconds.
   """
   @spec wait(event::cl_event, timeout::non_neg_integer) :: {:ok, any} | {:error, cl_error} | {:error, timeout}
   def wait(event, timeout) do
@@ -1557,11 +1574,11 @@ defmodule Clex.CL do
 
   @doc ~S"""
   Generate a wait operation that will run non blocking.
-  A reference is return that can be used to match the event
+  A reference is returned that can be used to match the event
   that is sent when the event has completed or resulted in an error.
-  The event returned has the form `{cl_event, Ref, Result}`
+  The event returned has the form `{:cl_event, Ref, Result}`
   where Ref is the reference that was returned from the call and
-  Result may be one of `binary() | 'complete'` or `{:error, cl_error()}`.
+  Result may be one of `binary` | `:complete`, or `{:error, cl_error}`.
   """
   @spec async_wait_for_event(event::cl_event) :: {:ok, reference} | {:error, cl_error}
   def async_wait_for_event(event) do
@@ -1569,7 +1586,12 @@ defmodule Clex.CL do
   end
 
   @doc ~S"""
-  Wait for all events in waitlist to complete.
+  Waits on the host thread for commands identified by event objects to complete.
+
+  ### Parameters
+
+  `waitlist` \
+  The events specified in `waitlist` act as synchronization points.
   """
   @spec wait_for_events(waitlist::list(cl_event)) :: list({:ok, any} | {:error, cl_error})
   def wait_for_events(waitlist) do
