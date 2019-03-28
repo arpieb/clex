@@ -1,6 +1,8 @@
 defmodule Clex.CL do
   @moduledoc ~S"""
-  This module provides a wrapper for OpenCL API functions and types exported by the [`:cl`](https://github.com/tonyrog/cl) Erlang module in addition to some convenience revisions to make the functions more idiomatic Elixir where possible.
+  This module provides a wrapper for all OpenCL API functions and types exported by the [`:cl`](https://github.com/tonyrog/cl) Erlang module in addition to some convenience revisions to make the functions more idiomatic Elixir where possible.
+
+  It is discouraged to call methods directly from this module, and instead leverage the versioned API modules to ensure the functions you are calling are supported for the OpenCL version implemented on your target platform.
   """
 
   # OpenCL object types

@@ -24,6 +24,10 @@ defmodule Clex.MixProject do
           "README.md",
           "LICENSE.md"
         ],
+        groups_for_modules: [
+          "Versioned APIs": [Clex.CL10, Clex.CL11, Clex.CL12],
+          "Records": [Clex.CL.ImageDesc, Clex.CL.ImageFormat],
+        ],
         groups_for_functions: [
           "Platform": & &1[:group] == :platform,
           "Devices": & &1[:group] == :devices,
