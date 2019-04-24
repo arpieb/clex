@@ -43,6 +43,16 @@ defmodule Clex.CL10 do
   add_cl_func :memory_objects, :enqueue_copy_image_to_buffer, [queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist]
   add_cl_func :memory_objects, :enqueue_copy_buffer, [queue, src_buffer, dest_buffer, src_offset, dest_offset, cb, waitlist]
   add_cl_func :memory_objects, :enqueue_copy_buffer_to_image, [queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist]
+
+  add_cl_func :memory_objects, :enqueue_read_buffer, [queue, buffer, offset, size]
+  add_cl_func :memory_objects, :enqueue_write_buffer, [queue, buffer, offset, size, data]
+  add_cl_func :memory_objects, :enqueue_read_image, [queue, image, origin, region, row_pitch, slice_pitch]
+  add_cl_func :memory_objects, :enqueue_write_image, [queue, image, origin, region, row_pitch, slice_pitch, data]
+  add_cl_func :memory_objects, :enqueue_copy_image, [queue, src_image, dest_image, src_origin, dest_origin, region]
+  add_cl_func :memory_objects, :enqueue_copy_image_to_buffer, [queue, src_image, dest_buffer, src_origin, region, dest_offset]
+  add_cl_func :memory_objects, :enqueue_copy_buffer, [queue, src_buffer, dest_buffer, src_offset, dest_offset, cb]
+  add_cl_func :memory_objects, :enqueue_copy_buffer_to_image, [queue, src_buffer, dest_image, src_offset, dest_origin, region]
+
   add_cl_func :memory_objects, :get_mem_object_info, [buffer]
   add_cl_func :memory_objects, :get_image_info, [image]
 
@@ -75,6 +85,9 @@ defmodule Clex.CL10 do
   # Executing Kernels
   add_cl_func :exec_kernels, :enqueue_nd_range_kernel, [queue, kernel, global_work_size, local_work_size, waitlist]
   add_cl_func :exec_kernels, :enqueue_task, [queue, kernel, waitlist]
+
+  add_cl_func :exec_kernels, :enqueue_nd_range_kernel, [queue, kernel, global_work_size, local_work_size]
+  add_cl_func :exec_kernels, :enqueue_task, [queue, kernel]
   # clEnqueueNativeKernel
 
   # Event Objects

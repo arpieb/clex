@@ -59,6 +59,21 @@ defmodule Clex.CL12 do
   add_cl_func :memory_objects, :release_mem_object, [buffer]
   # clSetMemObjectDestructorCallback
 
+  add_cl_func :memory_objects, :enqueue_read_buffer, [queue, buffer, offset, size]
+  add_cl_func :memory_objects, :enqueue_write_buffer, [queue, buffer, offset, size, data]
+  add_cl_func :memory_objects, :enqueue_read_buffer_rect, [queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch]
+  add_cl_func :memory_objects, :enqueue_write_buffer_rect, [queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data]
+  add_cl_func :memory_objects, :enqueue_fill_buffer, [queue, buffer, pattern, offset, size]
+  add_cl_func :memory_objects, :enqueue_copy_buffer, [queue, src_buffer, dest_buffer, src_offset, dest_offset, cb]
+  add_cl_func :memory_objects, :enqueue_copy_buffer_rect, [queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch]
+  add_cl_func :memory_objects, :enqueue_read_image, [queue, image, origin, region, row_pitch, slice_pitch]
+  add_cl_func :memory_objects, :enqueue_write_image, [queue, image, origin, region, row_pitch, slice_pitch, data]
+  add_cl_func :memory_objects, :enqueue_fill_image, [queue, image, fill_color, origin, region]
+  add_cl_func :memory_objects, :enqueue_copy_image, [queue, src_image, dest_image, src_origin, dest_origin, region]
+  add_cl_func :memory_objects, :enqueue_copy_image_to_buffer, [queue, src_image, dest_buffer, src_origin, region, dest_offset]
+  add_cl_func :memory_objects, :enqueue_copy_buffer_to_image, [queue, src_buffer, dest_image, src_offset, dest_origin, region]
+  add_cl_func :memory_objects, :enqueue_migrate_mem_objects, [queue, mem_objects, flags]
+
   # Sampler Objects
   add_cl_func :sampler_objects, :create_sampler, [context, normalized, addressing_mode, filter_mode]
   add_cl_func :sampler_objects, :retain_sampler, [sampler]
@@ -94,6 +109,9 @@ defmodule Clex.CL12 do
   add_cl_func :exec_kernels, :enqueue_nd_range_kernel, [queue, kernel, global_work_size, local_work_size, waitlist]
   add_cl_func :exec_kernels, :enqueue_task, [queue, kernel, waitlist]
   # clEnqueueNativeKernel
+
+  add_cl_func :exec_kernels, :enqueue_nd_range_kernel, [queue, kernel, global_work_size, local_work_size]
+  add_cl_func :exec_kernels, :enqueue_task, [queue, kernel]
 
   # Event Objects
   # clCreateUserEvent

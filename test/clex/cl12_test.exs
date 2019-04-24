@@ -198,7 +198,7 @@ defmodule Clex.CL12Test do
     {:ok, queue} = CL12.create_queue(context, hd(devices))
     {:ok, buffer} = CL12.create_buffer(context, [:read_write], size)
 
-    {:ok, event} = CL12.enqueue_read_buffer(queue, buffer, 0, size, [])
+    {:ok, event} = CL12.enqueue_read_buffer(queue, buffer, 0, size)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -214,7 +214,7 @@ defmodule Clex.CL12Test do
     {:ok, queue} = CL12.create_queue(context, hd(devices))
     {:ok, buffer} = CL12.create_buffer(context, [:read_write], size)
 
-    {:ok, event} = CL12.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value, [])
+    {:ok, event} = CL12.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -232,7 +232,7 @@ defmodule Clex.CL12Test do
     buffer_origin = [0, 0, 0]
     host_origin = [0, 0, 0]
     region = [10, 10, 1]
-    {:ok, event} = CL12.enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, 0, 0, 0, 0, [])
+    {:ok, event} = CL12.enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, 0, 0, 0, 0)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -253,7 +253,7 @@ defmodule Clex.CL12Test do
     buffer_origin = [0, 0, 0]
     host_origin = [0, 0, 0]
     region = [w, h, 1]
-    {:ok, event} = CL12.enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, 0, 0, 0, 0, data, [])
+    {:ok, event} = CL12.enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, 0, 0, 0, 0, data)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -269,7 +269,7 @@ defmodule Clex.CL12Test do
     {:ok, queue} = CL12.create_queue(context, hd(devices))
     {:ok, buffer} = CL12.create_buffer(context, [:read_write], size * 8)
 
-    {:ok, event} = CL12.enqueue_fill_buffer(queue, buffer, value, 0, size * 8, [])
+    {:ok, event} = CL12.enqueue_fill_buffer(queue, buffer, value, 0, size * 8)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -286,7 +286,7 @@ defmodule Clex.CL12Test do
     {:ok, src} = CL12.create_buffer(context, [:read_write], bufsize)
     {:ok, dest} = CL12.create_buffer(context, [:read_write], bufsize)
 
-    {:ok, event} = CL12.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize, [])
+    {:ok, event} = CL12.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -306,7 +306,7 @@ defmodule Clex.CL12Test do
     src_origin = [0, 0, 0]
     dest_origin = [0, 0, 0]
     region = [1, 1, 1]
-    {:ok, event} = CL12.enqueue_copy_buffer_rect(queue, src, dest, src_origin, dest_origin, region, 0, 0, 0, 0, [])
+    {:ok, event} = CL12.enqueue_copy_buffer_rect(queue, src, dest, src_origin, dest_origin, region, 0, 0, 0, 0)
     assert {:event_t, id, reference} = event
 
     CL12.finish(queue)
@@ -352,7 +352,7 @@ defmodule Clex.CL12Test do
     img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
     {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
 
-    {:ok, event} = CL12.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
+    {:ok, event} = CL12.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -373,7 +373,7 @@ defmodule Clex.CL12Test do
     img_desc = cl_image_desc(type: :image2d, width: w, height: h, buffer: :undefined)
     {:ok, image} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
 
-    {:ok, event} = CL12.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
+    {:ok, event} = CL12.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -397,7 +397,7 @@ defmodule Clex.CL12Test do
     fill_color = <<0::size(128)>>
     origin = [0, 0, 0]
     region = [10, 10, 1]
-    {:ok, event} = CL12.enqueue_fill_image(queue, image, fill_color, origin, region, [])
+    {:ok, event} = CL12.enqueue_fill_image(queue, image, fill_color, origin, region)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -419,7 +419,7 @@ defmodule Clex.CL12Test do
     {:ok, src} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
     {:ok, dest} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
 
-    {:ok, event} = CL12.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
+    {:ok, event} = CL12.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1])
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -441,7 +441,7 @@ defmodule Clex.CL12Test do
     {:ok, src} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
     {:ok, buffer} = CL12.create_buffer(context, [:read_write], byte_size(data))
 
-    {:ok, event} = CL12.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
+    {:ok, event} = CL12.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -463,7 +463,7 @@ defmodule Clex.CL12Test do
     {:ok, dest} = CL12.create_image(context, [:read_write], img_format, img_desc, data)
     {:ok, src} = CL12.create_buffer(context, [:read_write], byte_size(data))
 
-    {:ok, event} = CL12.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
+    {:ok, event} = CL12.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1])
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -479,7 +479,7 @@ defmodule Clex.CL12Test do
 
     flags = [:host]
     mem_objects = [buffer]
-    {:ok, event} = CL12.enqueue_migrate_mem_objects(queue, mem_objects, flags, [])
+    {:ok, event} = CL12.enqueue_migrate_mem_objects(queue, mem_objects, flags)
     assert {:event_t, id, reference} = event
 
     CL12.flush(queue)
@@ -807,7 +807,7 @@ defmodule Clex.CL12Test do
     {:ok, buffer} = CL12.create_buffer(context, [:read_write], 32)
     CL12.set_kernel_arg(kernel, 0, buffer)
 
-    {:ok, event} = CL12.enqueue_nd_range_kernel(queue, kernel, [1], [1], [])
+    {:ok, event} = CL12.enqueue_nd_range_kernel(queue, kernel, [1], [1])
     assert {:event_t, id, reference} = event
   end
 
@@ -822,7 +822,7 @@ defmodule Clex.CL12Test do
     {:ok, buffer} = CL12.create_buffer(context, [:read_write], 32)
     CL12.set_kernel_arg(kernel, 0, buffer)
 
-    {:ok, event} = CL12.enqueue_task(queue, kernel, [])
+    {:ok, event} = CL12.enqueue_task(queue, kernel)
     assert {:event_t, id, reference} = event
   end
 

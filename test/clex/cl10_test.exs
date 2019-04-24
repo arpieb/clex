@@ -153,7 +153,7 @@ defmodule Clex.CL10Test do
     {:ok, queue} = CL10.create_queue(context, hd(devices))
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], size)
 
-    {:ok, event} = CL10.enqueue_read_buffer(queue, buffer, 0, size, [])
+    {:ok, event} = CL10.enqueue_read_buffer(queue, buffer, 0, size)
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -169,7 +169,7 @@ defmodule Clex.CL10Test do
     {:ok, queue} = CL10.create_queue(context, hd(devices))
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], size)
 
-    {:ok, event} = CL10.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value, [])
+    {:ok, event} = CL10.enqueue_write_buffer(queue, buffer, 0, byte_size(value), value)
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -249,7 +249,7 @@ defmodule Clex.CL10Test do
     data = <<0::size(data_size)>>
     {:ok, image} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
 
-    {:ok, event} = CL10.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, [])
+    {:ok, event} = CL10.enqueue_read_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0)
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -269,7 +269,7 @@ defmodule Clex.CL10Test do
     data = <<0::size(data_size)>>
     {:ok, image} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
 
-    {:ok, event} = CL10.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data, [])
+    {:ok, event} = CL10.enqueue_write_image(queue, image, [0, 0, 0], [10, 10, 1], 0, 0, data)
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -290,7 +290,7 @@ defmodule Clex.CL10Test do
     {:ok, src} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
     {:ok, dest} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
 
-    {:ok, event} = CL10.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1], [])
+    {:ok, event} = CL10.enqueue_copy_image(queue, src, dest, [0, 0, 0], [0, 0, 0], [10, 10, 1])
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -311,7 +311,7 @@ defmodule Clex.CL10Test do
     {:ok, src} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], byte_size(data))
 
-    {:ok, event} = CL10.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0, [])
+    {:ok, event} = CL10.enqueue_copy_image_to_buffer(queue, src, buffer, [0, 0, 0], [10, 10, 1], 0)
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -328,7 +328,7 @@ defmodule Clex.CL10Test do
     {:ok, src} = CL10.create_buffer(context, [:read_write], bufsize)
     {:ok, dest} = CL10.create_buffer(context, [:read_write], bufsize)
 
-    {:ok, event} = CL10.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize, [])
+    {:ok, event} = CL10.enqueue_copy_buffer(queue, src, dest, 0, 0, bufsize)
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -349,7 +349,7 @@ defmodule Clex.CL10Test do
     {:ok, dest} = CL10.create_image2d(context, [:read_write], img_format, w, h, 0, data)
     {:ok, src} = CL10.create_buffer(context, [:read_write], byte_size(data))
 
-    {:ok, event} = CL10.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1], [])
+    {:ok, event} = CL10.enqueue_copy_buffer_to_image(queue, src, dest, 0, [0, 0, 0], [10, 10, 1])
     assert {:event_t, id, reference} = event
 
     CL10.flush(queue)
@@ -590,7 +590,7 @@ defmodule Clex.CL10Test do
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
     CL10.set_kernel_arg(kernel, 0, buffer)
 
-    {:ok, event} = CL10.enqueue_nd_range_kernel(queue, kernel, [1], [1], [])
+    {:ok, event} = CL10.enqueue_nd_range_kernel(queue, kernel, [1], [1])
     assert {:event_t, id, reference} = event
   end
 
@@ -605,7 +605,7 @@ defmodule Clex.CL10Test do
     {:ok, buffer} = CL10.create_buffer(context, [:read_write], 32)
     CL10.set_kernel_arg(kernel, 0, buffer)
 
-    {:ok, event} = CL10.enqueue_task(queue, kernel, [])
+    {:ok, event} = CL10.enqueue_task(queue, kernel)
     assert {:event_t, id, reference} = event
   end
 

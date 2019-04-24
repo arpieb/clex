@@ -583,7 +583,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_read_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist) do
+  def enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist \\ []) do
     :cl.enqueue_read_image(queue, image, origin, region, row_pitch, slice_pitch, waitlist)
   end
 
@@ -618,7 +618,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_write_image(queue::cl_command_queue, image::cl_mem, origin::list(non_neg_integer), region::list(non_neg_integer), row_pitch::non_neg_integer, slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist) do
+  def enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist \\ []) do
     :cl.enqueue_write_image(queue, image, origin, region, row_pitch, slice_pitch, data, waitlist)
   end
 
@@ -658,7 +658,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_copy_image(queue::cl_command_queue, src_image::cl_mem, dest_image::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist) do
+  def enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist \\ []) do
     :cl.enqueue_copy_image(queue, src_image, dest_image, src_origin, dest_origin, region, waitlist)
   end
 
@@ -690,7 +690,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_copy_image_to_buffer(queue::cl_command_queue, src_image::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), region::list(non_neg_integer), dest_offset::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist) do
+  def enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist \\ []) do
     :cl.enqueue_copy_image_to_buffer(queue, src_image, dest_buffer, src_origin, region, dest_offset, waitlist)
   end
 
@@ -722,7 +722,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_copy_buffer(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_offset::non_neg_integer, dest_offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist) do
+  def enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist \\ []) do
     :cl.enqueue_copy_buffer(queue, src_buffer, dest_buffer, src_offset, dest_offset, size, waitlist)
   end
 
@@ -756,7 +756,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_copy_buffer_to_image(queue::cl_command_queue, src_buffer::cl_mem, dest_image::cl_mem, src_offset::non_neg_integer, dest_origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist) do
+  def enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist \\ []) do
     :cl.enqueue_copy_buffer_to_image(queue, src_buffer, dest_image, src_offset, dest_origin, region, waitlist)
   end
 
@@ -811,7 +811,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_read_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist) do
+  def enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist \\ []) do
     :cl.enqueue_read_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, waitlist)
   end
 
@@ -855,7 +855,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_write_buffer_rect(queue::cl_command_queue, buffer::cl_mem, buffer_origin::list(non_neg_integer), host_origin::list(non_neg_integer), region::list(non_neg_integer), buffer_row_pitch::non_neg_integer, buffer_slice_pitch::non_neg_integer, host_row_pitch::non_neg_integer, host_slice_pitch::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist) do
+  def enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist \\ []) do
     :cl.enqueue_write_buffer_rect(queue, buffer, buffer_origin, host_origin, region, buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, data, waitlist)
   end
 
@@ -899,7 +899,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_copy_buffer_rect(queue::cl_command_queue, src_buffer::cl_mem, dest_buffer::cl_mem, src_origin::list(non_neg_integer), dest_origin::list(non_neg_integer), region::list(non_neg_integer), src_row_pitch::non_neg_integer, src_slice_pitch::non_neg_integer, dest_row_pitch::non_neg_integer, dest_slice_pitch::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist) do
+  def enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist \\ []) do
     # TODO something in the event handler for this function has an issue; tends to segfault when calling wait_for_events/1. :(
     :cl.enqueue_copy_buffer_rect(queue, src_buffer, dest_buffer, src_origin, dest_origin, region, src_row_pitch, src_slice_pitch, dest_row_pitch, dest_slice_pitch, waitlist)
   end
@@ -929,7 +929,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_fill_buffer(queue::cl_command_queue, buffer::cl_mem, pattern::binary, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist) do
+  def enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist \\ []) do
     :cl.enqueue_fill_buffer(queue, buffer, pattern, offset, size, waitlist)
   end
 
@@ -984,7 +984,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_fill_image(queue::cl_command_queue, image::cl_mem, fill_color::binary, origin::list(non_neg_integer), region::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_fill_image(queue, image, fill_color, origin, region, waitlist) do
+  def enqueue_fill_image(queue, image, fill_color, origin, region, waitlist \\ []) do
     :cl.enqueue_fill_image(queue, image, fill_color, origin, region, waitlist)
   end
 
@@ -1012,7 +1012,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_migrate_mem_objects(queue::cl_command_queue, mem_objects::list(cl_mem), flags::list(cl_mem_migration_flags), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist) do
+  def enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist \\ []) do
     :cl.enqueue_migrate_mem_objects(queue, mem_objects, flags, waitlist)
   end
 
@@ -1038,7 +1038,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_read_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_read_buffer(queue, buffer, offset, size, waitlist) do
+  def enqueue_read_buffer(queue, buffer, offset, size, waitlist \\ []) do
     :cl.enqueue_read_buffer(queue, buffer, offset, size, waitlist)
   end
 
@@ -1067,7 +1067,7 @@ defmodule Clex.CL do
   """
   @doc group: :memory_objects
   @spec enqueue_write_buffer(queue::cl_command_queue, buffer::cl_mem, offset::non_neg_integer, size::non_neg_integer, data::binary, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist) do
+  def enqueue_write_buffer(queue, buffer, offset, size, data, waitlist \\ []) do
     :cl.enqueue_write_buffer(queue, buffer, offset, size, data, waitlist)
   end
 
@@ -1573,7 +1573,7 @@ defmodule Clex.CL do
   """
   @doc group: :exec_kernels
   @spec enqueue_task(queue::cl_command_queue, kernel::cl_kernel, waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_task(queue, kernel, waitlist) do
+  def enqueue_task(queue, kernel, waitlist \\ []) do
     :cl.enqueue_task(queue, kernel, waitlist)
   end
 
@@ -1601,7 +1601,7 @@ defmodule Clex.CL do
   """
   @doc group: :exec_kernels
   @spec enqueue_nd_range_kernel(queue::cl_command_queue, kernel::cl_kernel, global_work_size::list(non_neg_integer), local_work_size::list(non_neg_integer), waitlist::list(cl_event)) :: {:ok, cl_event} | {:error, cl_error}
-  def enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist) do
+  def enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist \\ []) do
     :cl.enqueue_nd_range_kernel(queue, kernel, global_work_size, local_work_size, waitlist)
   end
 
