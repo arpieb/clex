@@ -1197,7 +1197,7 @@ defmodule Clex.CL do
   @doc group: :program_objects
   @spec create_program_with_builtin_kernels(context::cl_context, devices::list(cl_device), kernel_names::list(binary)) :: {:ok, cl_program} | {:error, cl_error}
   def create_program_with_builtin_kernels(context, devices, kernel_names) do
-    :cl.create_program_with_builtin_kernels(context, devices, Enum.join(kernel_names, ";"))
+    :cl.create_program_with_builtin_kernels(context, devices, Enum.join(kernel_names, ";") |> :binary.bin_to_list())
   end
 
   @doc ~S"""
@@ -1444,7 +1444,7 @@ defmodule Clex.CL do
   @doc group: :kernel_objects
   @spec create_kernel(program::cl_program, name::binary) :: {:ok, cl_kernel} | {:error, cl_error}
   def create_kernel(program, name) do
-    :cl.create_kernel(program, name)
+    :cl.create_kernel(program, name |> :binary.bin_to_list())
   end
 
   @doc ~S"""
