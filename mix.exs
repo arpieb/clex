@@ -57,7 +57,7 @@ defmodule Clex.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.19.3", only: :dev},
-      {:cl, git: "https://github.com/tonyrog/cl.git", ref: "0e49a47e78a1eb207c9968a2453447c55adbc3f9"},
+      {:cl, git: "https://github.com/arpieb/cl.git", branch: "dirty-nif", system_env: [{"USE_DIRTY_SCHEDULER", "1"}]},
     ]
   end
 
