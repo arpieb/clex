@@ -7,16 +7,14 @@ defmodule Clex.Utils do
   alias Clex.CL
 
   @doc ~S"""
-  Used to set multiple argument values for a kernel, starting at offset 0.
+  Used to set multiple argument values for a kernel, starting at index zero.
+
   Passing too many items will result in an `:invalid_arg_index` error.
 
   ### Parameters
 
   `kernel` \
   A valid kernel object.
-
-  `index` \
-  The argument index. Arguments to the kernel are referred by indices that go from 0 for the leftmost argument to n - 1, where n is the total number of arguments declared by a kernel.
 
   `args` \
   List of argument values to set, each one of the following types: `cl_mem`, `integer`, `float`, or `binary`.
